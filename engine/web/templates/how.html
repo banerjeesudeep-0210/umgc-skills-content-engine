@@ -1,0 +1,34 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>How the engine runs</h1>
+<p class="kicker">One web service, five background worker pools, two scheduled jobs and one Postgres database, defined in render.yaml. Workers pull jobs from Postgres; people decide at the gates in this dashboard.</p>
+<div class="grid" style="grid-template-columns:1fr 2fr 1fr;align-items:stretch">
+  <div class="card c2"><h3>Web service</h3><p>Dashboard, gate decisions, tutor endpoint, downloads, JSON API. Calls the orchestrator after every human decision.</p><p class="muted">engine.web.app</p></div>
+  <div class="card cw"><h3>Background workers (one Render service per pool)</h3>
+  <table><tr><th>Pool</th><th>Queues</th><th>Stage and tasks</th></tr>
+  <tr><td><b>skills</b></td><td>skills, refresh</td><td>1 Define skills: LOT occupation, JPA demand, Lightcast extract/trace, resolve, score, tier. Quarterly Lightcast refresh.</td></tr>
+  <tr><td><b>design</b></td><td>design</td><td>2 Blueprint: objectives, Courses and Modules, assessments, prerequisites, coverage rules, DAG, seat time.</td></tr>
+  <tr><td><b>build</b></td><td>build</td><td>3 Build: one job per Module or assessment, grounded drafting, provenance. Scale this pool for parallel Programs.</td></tr>
+  <tr><td><b>qa</b></td><td>qa, deliver</td><td>4 Automated checks per asset, Program QA and release scores. 5 Release, package, tutor evaluation set.</td></tr>
+  <tr><td><b>learn</b></td><td>learn, measure, improve</td><td>6 Learner cohort and xAPI. 7 Metrics. 8 Threshold scan and tickets.</td></tr></table></div>
+  <div class="card c0"><h3>Scheduled jobs</h3><p><b>Quarterly</b>: Lightcast refresh for every live Program.</p><p><b>Every 10 minutes</b>: housekeeping (requeue jobs left by a restarted worker; nudge Programs forward).</p></div>
+</div>
+<div class="grid g2">
+<div><h2>The control loop</h2><ol>
+<li>A Program is created from a Task Order brief: target occupation, credential, source pack.</li>
+<li>The orchestrator inspects the Program's records and gates and enqueues the next job (idempotent: each job has a unique key per Program).</li>
+<li>A worker in the right pool claims it with SELECT ... FOR UPDATE SKIP LOCKED, runs it, writes the record, and calls the orchestrator again.</li>
+<li>Where the proposal puts a person, the orchestrator opens a gate and waits. A decision in the dashboard moves the Program on, or returns the work with a note that the next draft must apply.</li>
+<li>Record writes take a per-Program advisory lock, so many workers and reviewers can act at once without losing an update.</li></ol>
+<h2>Modes</h2><p><b>Lightcast</b>: live when LIGHTCAST_CLIENT_ID and LIGHTCAST_CLIENT_SECRET are set (Open Skills, free). Set LIGHTCAST_LICENSED_PRODUCTS=true with UMGC's or Magic's license to call LOT, Job Postings Analytics and Career Pathways. Otherwise mock: every ID and demand figure starts with MOCK.</p>
+<p><b>Claude</b>: live when ANTHROPIC_API_KEY is set (model in ANTHROPIC_MODEL). Otherwise template drafting, labeled as such in every provenance record.</p></div>
+<div><h2>Gates</h2><table><tr><th>Gate</th><th>Owner</th></tr>
+<tr><td>Employer validation (3 employers)</td><td>Learning Experience Architect</td></tr>
+<tr><td>Gate 1 skills map</td><td>UMGC Program Lead</td></tr><tr><td>Gate 2 Blueprint</td><td>UMGC Program Lead</td></tr>
+<tr><td>Prototype Module</td><td>UMGC Program Lead</td></tr><tr><td>Sprint 1 and Sprint 2 review windows</td><td>UMGC content approval authority</td></tr>
+{% for n, g in VALIDATION_GATES.items() %}<tr><td>Validation gate {{ n }}: {{ g[0] }} (every asset)</td><td>{{ g[1] }}</td></tr>{% endfor %}
+<tr><td>QA report</td><td>UMGC Program Lead with accessibility office</td></tr><tr><td>Launch</td><td>UMGC Program Sponsor</td></tr>
+<tr><td>Material change tickets</td><td>UMGC approver</td></tr></table>
+<h2>Data</h2><p>programs, records (skills map, Blueprint, assets with every revision, QA report, releases, cohorts, metrics, tickets), jobs, gates, events, api_calls, statements (xAPI), workers. The traceability workbook and content packages are generated from these records on download.</p></div>
+</div>
+{% endblock %}

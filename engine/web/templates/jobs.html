@@ -1,0 +1,11 @@
+{% extends "base.html" %}
+{% block head %}<meta http-equiv="refresh" content="5">{% endblock %}
+{% block body %}
+<h1>Work queue</h1>
+<p class="kicker">Every job the workers pull from Postgres. A failed job retries up to {{ config.JOB_MAX_ATTEMPTS }} times.</p>
+<form method="post" action="/jobs/retry" class="inline"><button class="sec">Retry failed jobs</button></form>
+<table style="margin-top:10px"><tr><th>#</th><th>Program</th><th>Queue</th><th>Task</th><th>Key</th><th>Status</th><th>Tries</th><th>Worker</th><th>Created</th><th>Error</th></tr>
+{% for j in rows %}<tr><td>{{ j.id }}</td><td><a href="/p/{{ j.program_id }}">{{ j.program_id }}</a></td><td>{{ j.queue }}</td><td>{{ j.task }}</td><td class="muted">{{ j.dedupe_key }}</td>
+<td><span class="pill {{ 'ok' if j.status=='done' else ('bad' if j.status=='failed' else 'warn') }}">{{ j.status }}</span></td><td>{{ j.attempts }}</td><td class="muted">{{ j.worker }}</td><td class="muted">{{ j.created_at.strftime('%H:%M:%S') }}</td>
+<td>{% if j.error %}<details><summary>error</summary><pre>{{ j.error }}</pre></details>{% endif %}</td></tr>{% endfor %}</table>
+{% endblock %}

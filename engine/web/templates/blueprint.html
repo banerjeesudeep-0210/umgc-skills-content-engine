@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block body %}
+{% if not bp %}<p>The Blueprint is drafted after UMGC approves the skills map at Gate 1.</p>{% else %}
+<div class="band">
+  <div><div class="v">{{ bp.courses|length }}</div><div class="l">Courses</div></div>
+  <div><div class="v">{{ bp.courses|sum(attribute='modules', start=[])|length }}</div><div class="l">Modules</div></div>
+  <div><div class="v">{{ bp.assessments|length }}</div><div class="l">assessments</div></div>
+  <div><div class="v">{{ bp.objectives|length }}</div><div class="l">objectives</div></div>
+  <div><div class="v">{{ bp.seat_time.total_hours }}</div><div class="l">learner hours</div></div>
+  <div><div class="v">{{ bp.coverage.rules|selectattr('passed')|list|length }}/5</div><div class="l">coverage rules pass</div></div>
+</div>
+<p class="muted" style="margin-top:8px">{{ bp.origin }}. Prototype Module: {{ bp.prototype_module }}. <form method="post" action="/p/{{p.id}}/blueprint/regenerate" class="inline"><button class="sec">Regenerate Blueprint</button></form></p>
+<div class="grid g2">
+<div><h2>Coverage rules</h2>
+<table><tr><th>Rule</th><th>Result</th><th>Failures</th></tr>{% for r in bp.coverage.rules %}<tr><td>{{ r.rule }}</td><td><span class="pill {{ 'ok' if r.passed else 'bad' }}">{{ 'pass' if r.passed else 'fail' }}</span></td><td>{{ r.failures|join(', ') }}</td></tr>{% endfor %}</table>
+<h2>Prerequisites</h2><p>{{ bp.dag.edges }} relations ({% for k, v in bp.dag.by_type.items() %}{{ v }} {{ k.replace('_',' ') }}{% if not loop.last %}, {% endif %}{% endfor %}). Graph is <b>{{ 'acyclic' if bp.dag.acyclic else 'cyclic: ' ~ bp.dag.cycle|join(' > ') }}</b>.</p>
+<h2>Completion definition</h2><p>{{ bp.completion_definition }}</p></div>
+<div><h2>Seat-time map</h2><table><tr><th>Course</th><th>Online</th><th>Reading</th><th>Practice</th><th>Total</th></tr>
+{% for r in bp.seat_time.rows %}<tr><td>{{ r.name }}</td><td>{{ r.online }}</td><td>{{ r.reading }}</td><td>{{ r.practice }}</td><td><b>{{ r.total }}</b></td></tr>{% endfor %}</table></div>
+</div>
+<h2>Courses and Modules</h2>
+{% for c in bp.courses %}<details {{ 'open' if loop.first }}><summary>{{ c.name }} | Sprint {{ c.sprint }} | {{ c.learner_hours }} hours | {{ c.assessment_ids|join(', ') }}</summary>
+<table><tr><th>Module</th><th>Title</th><th>Type</th><th>Objectives</th><th>Skills</th><th>Assessments</th></tr>
+{% for m in c.modules %}<tr><td><a href="/p/{{p.id}}/asset/M-{{ m.module_id }}">{{ m.module_id }}</a></td><td>{{ m.title }}</td><td>{{ m.type }}</td><td>{{ m.objective_ids|join(', ') }}</td><td>{{ m.skill_ids|join(', ') }}</td><td>{{ m.assessment_ids|join(', ') }}</td></tr>{% endfor %}</table></details>{% endfor %}
+<h2>Assessments</h2>
+<table><tr><th>ID</th><th>Name</th><th>Type</th><th>Course</th><th>Auto-grade</th><th>Items</th><th>Measures</th><th>Practices</th><th>Perf. task</th></tr>
+{% for a in bp.assessments %}<tr><td><a href="/p/{{p.id}}/trace?assessment={{ a.assessment_id }}">{{ a.assessment_id }}</a></td><td>{{ a.name }}</td><td>{{ a.type }}</td><td>{{ a.course_id }}</td><td>{{ a.auto_grade }}</td><td>{{ a.items_count }}</td><td>{{ a.measured|join(', ') }}</td><td>{{ a.practiced|join(', ') }}</td><td>{{ 'Y' if a.performance_task else '' }}</td></tr>{% endfor %}</table>
+<h2>Trace matrix (A assessed, P practiced)</h2>
+<div style="overflow:auto"><table style="font-size:11px"><tr><th>Skill</th>{% for a in bp.assessments %}<th style="writing-mode:vertical-rl">{{ a.assessment_id }}</th>{% endfor %}<th>A</th><th>Perf.</th></tr>
+{% for k in sm.skills %}{% set t = bp.trace_matrix[k.skill_id] %}<tr><td><a href="/p/{{p.id}}/trace?skill={{ k.skill_id }}">{{ k.skill_id }}</a> {{ k.name }}</td>
+{% for a in bp.assessments %}{% set v = t.cells.get(a.assessment_id, '') %}<td style="text-align:center;{{ 'background:#4404BF;color:#fff' if v=='A' else ('background:#D2C1FF' if v=='P' else '') }}">{{ v }}</td>{% endfor %}<td>{{ t.times_assessed }}</td><td>{{ 'Y' if t.assessed_in_performance_task else '' }}</td></tr>{% endfor %}</table></div>
+{% endif %}
+{% endblock %}

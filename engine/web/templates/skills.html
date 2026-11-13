@@ -1,0 +1,48 @@
+{% extends "base.html" %}
+{% block body %}
+{% if not sm %}<p>The skills worker is drafting the map. This page refreshes when it is ready.</p><meta http-equiv="refresh" content="4">{% else %}
+<div class="band">
+  <div><div class="v">{{ sm.skills|length }}</div><div class="l">skills in the catalog</div></div>
+  <div><div class="v">{{ sm.skills|selectattr('resolution_status','equalto','resolved')|list|length }}</div><div class="l">resolved to one Lightcast ID</div></div>
+  <div><div class="v">{{ sm.competencies|length }}</div><div class="l">competencies</div></div>
+  <div><div class="v">{{ sm.skills|selectattr('tier','equalto','Core')|list|length }}</div><div class="l">Core skills</div></div>
+  <div><div class="v">{{ sm.taxonomy_version }}</div><div class="l">Lightcast taxonomy version</div></div>
+  <div><div class="v">{{ sm.demand_mode }}</div><div class="l">Job Postings Analytics</div></div>
+</div>
+<div class="grid g3" style="margin-top:14px">
+  <div class="card c0"><h3>Occupation (Lightcast LOT)</h3><div class="kv">
+    <div>Title</div><div>{{ sm.occupation.title }}</div><div>LOT occupation</div><div>{{ sm.occupation.lot_occupation_name }} <span class="muted">{{ sm.occupation.lot_occupation_id }}</span></div>
+    <div>Specialized</div><div>{{ sm.occupation.lot_specialized_occupation_name }}</div><div>SOC crosswalk</div><div>{{ sm.occupation.soc_crosswalk or '' }}</div>
+    <div>Postings, 12 months</div><div>MD {{ sm.demand_total_md or 'at Discovery' }} | US {{ sm.demand_total_us or 'at Discovery' }}</div></div></div>
+  <div class="card c1"><h3>How each skill was scored</h3><p>Priority = 40 percent demand (JPA share of postings, normalized 0 to 5) + 30 percent SME criticality + 20 percent credential weight (mentions in the exam objectives) + 10 percent entry-level fit. Core 3.5 and up, Supporting 2.5 to 3.4, Awareness below 2.5.</p><p class="muted">{{ sm.catalog_origin }}</p></div>
+  <div class="card c2"><h3>Employer validation</h3>
+    {% if sm.employers %}<p>Validated by: {{ sm.employers|join('; ') }}</p>{% else %}
+    <form method="post" action="/p/{{p.id}}/employers"><p><input name="e1" placeholder="Employer 1 (Maryland)" style="width:100%"></p><p><input name="e2" placeholder="Employer 2" style="width:100%"></p><p><input name="e3" placeholder="Employer 3 or UMGC nominee" style="width:100%"></p><p><input name="by" value="{{ me.name }}" placeholder="Recorded by (LXA)" required> <button>Record validation</button></p></form>{% endif %}</div>
+</div>
+<h2>Source pack extraction (Lightcast extract/trace)</h2>
+<table><tr><th>Source</th><th>Title</th><th>Characters</th><th>Skills found</th><th>Mentions with spans</th></tr>
+{% for x in sm.extraction_log %}<tr><td>{{ x.source_id }}</td><td>{{ x.title }}</td><td>{{ x.chars }}</td><td>{{ x.skills_found }}</td><td>{{ x.mentions }}</td></tr>{% endfor %}</table>
+<h2>Skills map</h2>
+<p class="muted">Every row is a Lightcast Open Skills record. Click a skill to see the trace or edit it as the SME.</p>
+<div style="overflow:auto;max-height:70vh"><table>
+<tr><th>ID</th><th>Lightcast skill</th><th>Lightcast ID</th><th>Type / subcategory</th><th>Statement</th><th>Comp.</th><th>Tier</th><th>Exit</th><th>MD postings</th><th>Share</th><th>Cred. wt</th><th>SME</th><th>Priority</th><th>Resolution</th><th>Source span</th><th>Taught / assessed</th><th></th></tr>
+{% for k in sm.skills %}{% set t = tm.get(k.skill_id, {}) %}
+<tr><td><a href="/p/{{p.id}}/trace?skill={{ k.skill_id }}">{{ k.skill_id }}</a></td><td><b>{{ k.lightcast_skill_name or k.name }}</b></td>
+<td class="muted">{{ k.lightcast_skill_id }}</td><td class="muted">{{ k.skill_type }}<br>{{ k.subcategory }}</td><td style="min-width:240px">{{ k.statement }}</td><td>{{ k.competency_id }}</td>
+<td><span class="pill {{ 'p' if k.tier=='Core' else '' }}">{{ k.tier }}</span>{% if k.tier != k.tier_from_score %}<div class="muted">score says {{ k.tier_from_score }}</div>{% endif %}</td><td>{{ k.exit_level }}</td>
+<td>{{ k.unique_postings_md if k.unique_postings_md is not none else 'Discovery' }}</td><td>{{ k.postings_share_pct if k.postings_share_pct is not none else '' }}</td><td>{{ k.credential_weight }}</td><td>{{ k.sme_criticality }}</td><td><b>{{ k.priority_score }}</b></td>
+<td><span class="pill {{ 'ok' if k.resolution_status=='resolved' else 'warn' }}">{{ k.resolution_status }}</span> <span class="muted">{{ k.resolution_score }}</span>{% if k.alternatives %}<div class="muted">alt: {{ k.alternatives|join('; ') }}</div>{% endif %}</td>
+<td class="muted" style="min-width:180px">{% for sp in k.source_spans[:2] %}{{ sp.source_id }} [{{ sp.start }}:{{ sp.end }}] "...{{ sp.context }}..."<br>{% endfor %}</td>
+<td class="muted">{{ t.get('taught_in', [])|join(', ') }}<br>{% if t %}assessed {{ t.times_assessed }}x{% endif %}</td>
+<td><details><summary>Edit</summary><form method="post" action="/p/{{p.id}}/skills/edit" style="min-width:260px"><input type="hidden" name="skill_id" value="{{ k.skill_id }}">
+<textarea name="statement" rows="2">{{ k.statement }}</textarea><select name="tier"><option>{{ k.tier }}</option><option>Core</option><option>Supporting</option><option>Awareness</option></select>
+<input name="sme_criticality" type="number" min="1" max="5" value="{{ k.sme_criticality }}" style="width:60px"><input name="lightcast_skill_id" value="{{ k.lightcast_skill_id }}" placeholder="Lightcast ID"><input name="by" value="{{ me.name }}" placeholder="SME name"><button>Save</button></form></details></td></tr>
+{% endfor %}</table></div>
+<h2>Competencies</h2>
+<table><tr><th>ID</th><th>Name</th><th>Definition</th><th>Exit level</th><th>Performance criteria</th><th>Evidence</th><th>Skills</th></tr>
+{% for c in sm.competencies %}<tr><td>{{ c.competency_id }}</td><td><b>{{ c.name }}</b></td><td>{{ c.definition }}</td><td>{{ c.exit_level }}</td><td>{{ c.performance_criteria }}</td><td>{{ c.evidence }}</td><td>{{ c.skill_ids|join(', ') }}</td></tr>{% endfor %}</table>
+{% if sm.candidates_not_in_catalog %}<h2>Candidates in the sources but not in the catalog</h2>
+<p>{% for c in sm.candidates_not_in_catalog %}<span class="pill">{{ c.name }} ({{ c.mentions }})</span> {% endfor %}</p>{% endif %}
+{% if sm.last_refresh %}<h2>Last quarterly refresh</h2><pre>{{ json.dumps(sm.last_refresh, indent=1) }}</pre>{% endif %}
+{% endif %}
+{% endblock %}

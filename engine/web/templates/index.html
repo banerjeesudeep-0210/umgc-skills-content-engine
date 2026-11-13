@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Programs</h1>
+<p class="kicker">Each Program runs the eight-stage workflow from the Technical Proposal: AI drafts, checks, tutors and predicts; people decide at every gate; UMGC approves before anything moves on.</p>
+<div class="grid g3">
+  <div class="card c0"><h3>Run the sample Program</h3><p>Cybersecurity Operations Foundations (Security+ aligned): 8 Courses, 40 Lightcast skills, 36 assessments, from Exhibits H and I.</p>
+    <form method="post" action="/programs/sample"><button>Start sample Program</button></form></div>
+  <div class="card c1"><h3>Start a new Program</h3><p>Name the target occupation and paste the source pack: credential exam objectives, UMGC outcomes, posting text.</p>
+    <a class="btn sec" href="/programs/new">New Program</a></div>
+  <div class="card c2"><h3>Worker pools</h3>
+    {% for w in workers %}<div>{{ w.name }} <span class="pill {{ 'ok' if fresh(w) else 'bad' }}">{{ 'alive' if fresh(w) else 'silent' }}</span> <span class="muted">{{ w.queues }} | {{ w.jobs_done }} jobs</span></div>
+    {% else %}<p class="muted">No worker has reported yet. On Render the five background workers start with the Blueprint.</p>{% endfor %}
+    <p class="muted">Queue: {{ q.get('queued',0) }} queued, {{ q.get('running',0) }} running, {{ q.get('done',0) }} done, {{ q.get('failed',0) }} failed</p></div>
+</div>
+<h2>All Programs</h2>
+<table><tr><th>#</th><th>Program</th><th>Stage</th><th>Status</th><th>Release</th><th>Created</th></tr>
+{% for p in progs %}<tr><td>{{ p.id }}</td><td><a href="/p/{{ p.id }}">{{ p.name }}</a></td><td>{{ dict(STAGES).get(p.stage, p.stage) }}</td>
+<td><span class="pill {{ 'warn' if 'await' in p.status else ('ok' if 'live' in p.status else 'p') }}">{{ p.status }}</span></td><td>{{ p.release_version or '' }}</td><td class="muted">{{ p.created_at.strftime('%Y-%m-%d %H:%M') }} UTC</td></tr>
+{% else %}<tr><td colspan="6" class="muted">No Programs yet.</td></tr>{% endfor %}</table>
+{% endblock %}

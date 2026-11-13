@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>New Program</h1>
+<p class="kicker">The skills worker names the occupation in the Lightcast Occupation Taxonomy, extracts Lightcast skills from every source item with trace spans, and drafts the skills map for SME, employer and UMGC review.</p>
+<form method="post" action="/programs/new" class="grid g2">
+  <div><h3>Program</h3>
+    <p><label>Program name<br><input name="name" required style="width:100%" placeholder="AI Adoption for Operations Teams"></label></p>
+    <p><label>Target occupation (job title)<br><input name="occupation" required style="width:100%" placeholder="Operations Analyst"></label></p>
+    <p><label>Lightcast LOT occupation name (optional)<br><input name="lot" style="width:100%"></label></p>
+    <p><label>Lightcast LOT specialized occupation (optional)<br><input name="specialized" style="width:100%"></label></p>
+    <p><label>Aligned credential (optional)<br><input name="credential" style="width:100%"></label></p>
+  </div>
+  <div><h3>Source pack (the only material the AI may draw on)</h3>
+    <p><input name="src1_title" value="Credential exam objectives" style="width:100%"><textarea name="src1" rows="6" placeholder="Paste the published exam objectives or the framework"></textarea></p>
+    <p><input name="src2_title" value="UMGC program outcomes" style="width:100%"><textarea name="src2" rows="4" placeholder="Paste UMGC course or program outcomes"></textarea></p>
+    <p><input name="src3_title" value="Job posting sample" style="width:100%"><textarea name="src3" rows="4" placeholder="Optional: posting text for the target occupation"></textarea></p>
+  </div>
+  <div><button>Create Program and start Stage 1</button></div>
+</form>
+{% endblock %}

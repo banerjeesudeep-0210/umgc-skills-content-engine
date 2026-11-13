@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+{% block body %}
+<p><a href="/p/{{p.id}}/studio?zone=write">All assets</a> | <a href="/p/{{p.id}}/asset/{{ a.asset_id }}">Checks, provenance and gates</a></p>
+<h2>Write: {{ a.asset_id }} {{ a.title }}</h2>
+<p class="kicker">Revision {{ a.revision }} ({{ a.state }}){% if a.draft %} | working draft by {{ a.draft.edited_by }} {{ a.draft.edited_at }}, based on r{{ a.draft.base_revision }}{% endif %}
+ | skills: {% for sid in a.skill_ids %}<span class="pill">{{ sid }} {{ skills[sid].name if sid in skills else '' }}</span> {% endfor %}</p>
+{% if a.state == 'author' and a.draft and a.draft.returned_note %}<div class="error">Returned to the author: {{ a.draft.returned_note }}. Revise and submit again.</div>{% endif %}
+{% if a.draft and a.draft.base_revision != a.revision %}<div class="error">This draft started from r{{ a.draft.base_revision }} but the asset is now at r{{ a.revision }}. Compare with the latest revision before you submit.</div>{% endif %}
+<div class="grid" style="grid-template-columns:2fr 1fr">
+<div>
+<form method="post" id="ed">
+<input type="hidden" name="base_revision" value="{{ a.draft.base_revision if a.draft else a.revision }}">
+<p><label>Title<br><input name="title" value="{{ c.title or a.title }}" style="width:100%"></label></p>
+{% if a.asset_type == 'module' %}
+  {% for sc in (c.screens or []) + [{'heading':'','blocks':[{'text':'','citations':[]}],'media':None}] %}{% set i = loop.index0 %}
+  <div class="screen" style="border-left-color:{{ '#7D5BD9' if not sc.heading else '#D2C1FF' }}">
+    <div style="display:flex;gap:6px;align-items:center"><b style="width:70px">{{ 'Screen ' ~ (i+1) if sc.heading else 'New screen' }}</b>
+      <input name="s{{i}}_heading" value="{{ sc.heading }}" placeholder="Heading" style="flex:1">
+      {% if sc.heading %}<label class="muted"><input type="checkbox" name="s{{i}}_delete"> remove</label>{% endif %}</div>
+    <textarea name="s{{i}}_text" id="t{{i}}" rows="4" style="margin-top:4px">{{ sc.blocks[0].text if sc.blocks else '' }}</textarea>
+    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
+      <input name="s{{i}}_cites" id="c{{i}}" value="{{ (sc.blocks[0].citations if sc.blocks else [])|join(', ') }}" placeholder="Sources, e.g. {{ pack_ids[:2]|join(', ') }}" style="width:200px">
+      <input name="s{{i}}_alt" value="{{ sc.media.alt if sc.media else '' }}" placeholder="Alt text for the screen's image or diagram" style="flex:1">
+      {% if sc.media %}<input type="hidden" name="s{{i}}_hasmedia" value="1">{% endif %}
+      <input id="ai{{i}}" placeholder="Ask AI: e.g. add a worked example" style="width:220px"><button type="button" class="sec" onclick="assist({{i}})">AI assist</button></div>
+    <div class="muted" id="n{{i}}"></div>
+  </div>{% endfor %}
+  <p><label>Practice prompts (one per line)<textarea name="practice" rows="3">{% for pr in c.practice or [] %}{{ pr.prompt }}
+{% endfor %}</textarea></label></p>
+  <p><label>Summary<input name="summary" value="{{ c.summary }}" style="width:100%"></label></p>
+{% elif c.get('items') is not none or a.type in ('knowledge check','practice exam') %}
+  {% for it in (c.get('items') or []) + [{'item_id':'','stem':'','options':[],'key':'A','skill_id':'','objective_id':''}] %}{% set i = loop.index0 %}
+  <div class="screen"><div style="display:flex;gap:6px"><b style="width:90px">{{ it.item_id or 'New item' }}</b><input type="hidden" name="i{{i}}_id" value="{{ it.item_id }}">
+    <input name="i{{i}}_skill" value="{{ it.skill_id }}" placeholder="Skill ID" style="width:80px"><input name="i{{i}}_obj" value="{{ it.objective_id }}" placeholder="Objective" style="width:80px">
+    Key <select name="i{{i}}_key">{% for L in 'ABCD' %}<option {{ 'selected' if it.key == L }}>{{ L }}</option>{% endfor %}</select>
+    {% if it.item_id %}<label class="muted"><input type="checkbox" name="i{{i}}_delete"> remove</label>{% endif %}</div>
+    <textarea name="i{{i}}_stem" rows="2" placeholder="Stem" style="margin-top:4px">{{ it.stem }}</textarea>
+    {% for L in 'ABCD' %}{% set o = (it.options|selectattr('id','equalto',L)|list or [{'text':'','rationale':''}])[0] %}
+    <div style="display:flex;gap:6px;margin-top:3px"><b>{{ L }}</b><input name="i{{i}}_{{L}}" value="{{ o.text }}" style="flex:2"><input name="i{{i}}_{{L}}_why" value="{{ o.rationale }}" placeholder="Why it is right or what misconception it reveals" style="flex:1"></div>{% endfor %}</div>{% endfor %}
+{% else %}
+  <p><label>Task prompt<textarea name="prompt" rows="4">{{ c.prompt }}</textarea></label></p>
+  <p><label>Steps (one per line)<textarea name="steps" rows="4">{{ (c.steps or [])|join('\n') }}</textarea></label></p>
+  <p><label>Rubric rows (criterion | level 1 | level 2 | level 3 | level 4)<textarea name="rubric" rows="5">{% for r in c.rubric or [] %}{{ r.criterion }} | {{ r.levels|join(' | ') }}
+{% endfor %}</textarea></label></p>
+{% endif %}
+<div class="card c1" style="position:sticky;bottom:44px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+  <button name="action" value="save">Save draft</button>
+  {% if live %}<select name="change_class"><option>routine</option><option>material</option></select><input name="change_note" placeholder="What changed and why" style="min-width:220px">{% endif %}
+  <button name="action" value="submit" class="sec">Submit for validation{% if live %} (raises a change ticket){% endif %}</button>
+  <span class="muted">Signed in as {{ me.name or 'nobody' }} ({{ me.role }}). Every save is recorded.</span></div>
+</form>
+{% if a.draft %}<form method="post" action="/p/{{p.id}}/studio/edit/{{ a.asset_id }}/discard"><button class="sec warn" style="margin-top:6px">Discard draft</button></form>{% endif %}
+</div>
+<div>
+<h3>Owners</h3>{% set o = a.owners or {} %}
+<form method="post" action="/p/{{p.id}}/studio/owners"><input type="hidden" name="asset" value="{{ a.asset_id }}">
+{% for f, lbl, rl in [('author','Author (ID)','Instructional Designer'),('sme','Magic SME','SME'),('reviewer','Reviewer','')] %}
+<p><label class="muted">{{ lbl }}</label><br><select name="{{ f }}" style="width:100%"><option value="">-</option>{% for m in team.members if (not rl or rl in m.role) %}<option {{ 'selected' if o.get(f) == m.name }}>{{ m.name }}</option>{% endfor %}</select></p>{% endfor %}
+<button class="sec">Save owners</button></form>
+<h3>Findings on r{{ a.revision }}</h3>
+{% for f in findings %}<div class="sev-{{ f.severity }}" style="font-size:12px">{{ f.severity }}: <span style="font-weight:400;color:#1A1A1A">{{ f.message }}</span></div>{% else %}<p class="muted">None.</p>{% endfor %}
+<h3 id="comments">Comments</h3>
+{% for cm in comments if not cm.parent %}
+<div class="card {{ 'c2' if cm.status=='open' else 'cw' }}" style="margin-bottom:6px;padding:8px 10px"><b>{{ cm.by }}</b> <span class="muted">{{ cm.role }} | {{ cm.at[:16] }}{% if cm.anchor %} | {{ cm.anchor }}{% endif %}</span>
+<p style="margin:4px 0">{{ cm.body }}</p>
+{% for rp in comments if rp.parent == cm.comment_id %}<div style="margin-left:12px;border-left:2px solid #D2C1FF;padding-left:8px"><b>{{ rp.by }}</b> <span class="muted">{{ rp.at[:16] }}</span><br>{{ rp.body }}</div>{% endfor %}
+{% if cm.status == 'open' %}<form method="post" action="/p/{{p.id}}/studio/comment" class="inline" style="margin-top:4px"><input type="hidden" name="asset" value="{{ a.asset_id }}"><input type="hidden" name="parent" value="{{ cm.comment_id }}"><input name="body" placeholder="Reply" style="width:150px"><button class="sec">Reply</button></form>
+<form method="post" action="/p/{{p.id}}/studio/resolve" class="inline"><input type="hidden" name="cid" value="{{ cm.comment_id }}"><input type="hidden" name="asset" value="{{ a.asset_id }}"><button class="sec">Resolve</button></form>
+{% else %}<span class="pill ok">resolved by {{ cm.resolved_by }}</span>{% endif %}</div>{% endfor %}
+<form method="post" action="/p/{{p.id}}/studio/comment"><input type="hidden" name="asset" value="{{ a.asset_id }}">
+<select name="anchor" style="width:100%"><option value="">Whole asset</option>{% for sc in c.screens or [] %}<option>{{ sc.heading }}</option>{% endfor %}{% for it in c.get('items') or [] %}<option>{{ it.item_id }}</option>{% endfor %}</select>
+<textarea name="body" rows="3" placeholder="Comment. Use @Magic SME or @UMGC Program Lead to notify." style="margin-top:4px"></textarea><button>Post comment</button></form>
+</div></div>
+<script>
+async function assist(i){const h=document.querySelector('[name=s'+i+'_heading]').value;const t=document.getElementById('t'+i);
+const ins=document.getElementById('ai'+i).value||'Draft this screen for working adult learners';document.getElementById('n'+i).textContent='Drafting from the approved source pack...';
+const r=await fetch('/p/{{p.id}}/studio/assist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({instruction:ins,heading:h,current:t.value,asset:'{{ a.asset_id }}'})});
+const d=await r.json();if(d.text){t.value=d.text;document.getElementById('c'+i).value=d.citations.join(', ');}document.getElementById('n'+i).textContent=d.note;}
+</script>
+{% endblock %}

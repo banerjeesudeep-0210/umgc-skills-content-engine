@@ -1,0 +1,35 @@
+{% extends "base.html" %}
+{% block body %}
+{% if not ready %}<p>The trace is available once the skills map and Blueprint exist.</p>{% else %}
+<p class="kicker">Downward: demand to proof. Upward: proof to demand. Every row in the workbook links both ways.</p>
+<div class="grid g2">
+<form method="get" class="card c0"><b>Start at a Lightcast skill (downward)</b><br><select name="skill" style="width:100%;margin:6px 0">{% for k in sm.skills %}<option value="{{ k.skill_id }}" {{ 'selected' if k.skill_id == skill }}>{{ k.skill_id }} {{ k.name }} ({{ k.tier }})</option>{% endfor %}</select><button>Trace down</button></form>
+<form method="get" class="card c2"><b>Start at an assessment (upward)</b><br><select name="assessment" style="width:100%;margin:6px 0">{% for a in bp.assessments %}<option value="{{ a.assessment_id }}" {{ 'selected' if a.assessment_id == assessment }}>{{ a.assessment_id }} {{ a.name }}</option>{% endfor %}</select><button>Trace up</button></form>
+</div>
+{% if down %}{% set k = down.skill %}
+<h2>Downward trace: {{ k.skill_id }} {{ k.name }}</h2>
+<div class="grid" style="grid-template-columns:repeat(6,1fr)">
+  <div class="card cw"><div class="muted">Occupation (LOT)</div><b>{{ down.occupation.lot_specialized_occupation_name or down.occupation.lot_occupation_name }}</b><div class="muted">{{ down.occupation.lot_occupation_id }}</div></div>
+  <div class="card c0"><div class="muted">Lightcast skill</div><b>{{ k.lightcast_skill_name }}</b><div class="muted">{{ k.lightcast_skill_id }} | {{ k.skill_type }}</div><div>MD postings: {{ k.unique_postings_md or 'Discovery' }}{% if k.postings_share_pct %} ({{ k.postings_share_pct }}%){% endif %}</div><div>Priority {{ k.priority_score }} | {{ k.tier }}</div></div>
+  <div class="card c1"><div class="muted">Competency</div><b>{{ down.competency.competency_id }} {{ down.competency.name }}</b><div class="muted">exit {{ k.exit_level }}</div></div>
+  <div class="card c2"><div class="muted">Objectives</div>{% for o in down.objectives %}<div><b>{{ o.objective_id }}</b> {{ o.statement }} <span class="muted">({{ o.bloom_level }})</span></div>{% endfor %}</div>
+  <div class="card c0"><div class="muted">Modules</div>{% for c, m in down.modules %}<div><a href="/p/{{p.id}}/asset/M-{{ m.module_id }}">{{ m.module_id }}</a> {{ m.title }}</div>{% endfor %}</div>
+  <div class="card c1"><div class="muted">Assessments</div>{% for a in down.assessments %}<div><a href="?assessment={{ a.assessment_id }}">{{ a.assessment_id }}</a> {{ a.name }} <span class="pill {{ 'p' if k.skill_id in a.measured else '' }}">{{ 'measures' if k.skill_id in a.measured else 'practices' }}</span></div>{% endfor %}</div>
+</div>
+<p>Assessed {{ down.tm.times_assessed }} times{% if down.tm.assessed_in_performance_task %}, including a performance task{% endif %}. Source spans: {% for sp in k.source_spans[:3] %}<span class="pill">{{ sp.source_id }} [{{ sp.start }}:{{ sp.end }}] "{{ sp.surface_form }}"</span> {% endfor %}</p>
+{% if down.get('items') %}<h3>Items that measure it</h3><table>{% for aid, it in down.get('items') %}<tr><td>{{ it.item_id }}</td><td>{{ it.stem }}</td><td>key {{ it.key }}</td></tr>{% endfor %}</table>{% endif %}
+{% if down.rubric %}<h3>Rubric rows that score it</h3><table>{% for aid, r in down.rubric %}<tr><td>{{ aid }}</td><td>{{ r.criterion }}</td></tr>{% endfor %}</table>{% endif %}
+{% endif %}
+{% if up %}{% set a = up.assessment %}
+<h2>Upward trace: {{ a.assessment_id }} {{ a.name }}</h2>
+<div class="grid" style="grid-template-columns:repeat(5,1fr)">
+  <div class="card c1"><div class="muted">Assessment</div><b>{{ a.name }}</b><div>{{ a.type }} | auto-grade {{ a.auto_grade }}{% if a.performance_task %} | performance task{% endif %}</div></div>
+  <div class="card c2"><div class="muted">Objectives it measures</div>{% for o in up.objectives %}<div><b>{{ o.objective_id }}</b> {{ o.statement }}</div>{% endfor %}</div>
+  <div class="card c0"><div class="muted">Competencies</div>{% for c in up.competencies %}<div><b>{{ c }}</b> {{ up.comps[c].name }}</div>{% endfor %}</div>
+  <div class="card c1"><div class="muted">Lightcast skills</div>{% for k in up.skills %}<div><a href="?skill={{ k.skill_id }}">{{ k.skill_id }}</a> {{ k.lightcast_skill_name }} <span class="muted">{{ k.lightcast_skill_id }} | MD {{ k.unique_postings_md or 'Discovery' }}</span></div>{% endfor %}
+    {% if up.practiced %}<div class="muted" style="margin-top:6px">Practiced: {{ up.practiced|map(attribute='name')|join(', ') }}</div>{% endif %}</div>
+  <div class="card cw"><div class="muted">Occupation UMGC targets</div><b>{{ up.occupation.lot_specialized_occupation_name or up.occupation.lot_occupation_name }}</b></div>
+</div>
+{% endif %}
+{% endif %}
+{% endblock %}

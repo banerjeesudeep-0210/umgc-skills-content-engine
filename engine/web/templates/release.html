@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block body %}
+{% if not rels %}<p>The first release is built after UMGC accepts the QA report.</p>{% else %}
+{% for ver, status, r in rels|reverse %}
+<h2>Release {{ ver }} <span class="pill {{ 'ok' if status=='live' else '' }}">{{ status }}</span></h2>
+<p class="kicker">{{ r.created_at }} | {{ r.change_class }} | {{ r.manifest|length }} assets{% if r.changed_assets %} | changed: {{ r.changed_assets|join(', ') }}{% endif %}{% if r.tickets %} | tickets {{ r.tickets|join(', ') }}{% endif %}
+ <a class="btn sec" href="/p/{{p.id}}/download/package/{{ ver }}">Download content package (HTML5, QTI 2.1, manifest, LTI config, provenance)</a></p>
+<div class="grid g2">
+<div><h3>Launch readiness</h3><table>{% for c in r.launch_readiness.checklist %}<tr><td>{{ c.item }}</td><td><span class="pill {{ 'ok' if c.ok else 'bad' }}">{{ 'yes' if c.ok else 'no' }}</span></td></tr>{% endfor %}</table>
+<h3>LTI 1.3 tool configuration</h3><pre>{{ json.dumps(r.lti_tool_config, indent=1) }}</pre></div>
+<div>{% if r.tutor_evaluation %}<h3>Tutor evaluation set (pre-deployment)</h3>
+<p>{% for k, v in r.tutor_evaluation.by_category.items() %}<span class="pill {{ 'ok' if v.rate >= r.tutor_evaluation.thresholds[k] else 'bad' }}">{{ k.replace('_',' ') }} {{ v.passed }}/{{ v.total }}</span> {% endfor %} Overall: <b>{{ 'passed' if r.tutor_evaluation.passed else 'failed' }}</b></p>
+<details><summary>All {{ r.tutor_evaluation.cases|length }} cases</summary><table>{% for c in r.tutor_evaluation.cases %}<tr><td>{{ c.course }}</td><td>{{ c.category }}</td><td>{{ c.q }}</td><td><span class="pill {{ 'ok' if c.passed else 'bad' }}">{{ c.got }}</span></td><td class="muted">{{ c.answer }}</td></tr>{% endfor %}</table></details>
+{% else %}<p class="muted">No Module changed, so the tutor evaluation from the previous release stands.</p>{% endif %}
+<h3>Provenance log</h3><div style="max-height:300px;overflow:auto"><table><tr><th>Asset</th><th>Rev</th><th>Contribution</th><th>Model / prompt</th><th>Gates</th></tr>
+{% for x in r.provenance %}<tr><td>{{ x.asset }}</td><td>{{ x.revision }}</td><td>{{ x.ai_contribution }}</td><td class="muted">{{ x.model }} | {{ x.prompt_id }} v{{ x.prompt_version }}</td><td>{{ x.gates|length }}/5</td></tr>{% endfor %}</table></div></div>
+</div>
+{% endfor %}{% endif %}
+{% endblock %}

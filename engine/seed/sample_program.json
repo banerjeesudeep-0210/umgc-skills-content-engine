@@ -1,0 +1,2931 @@
+{
+ "name": "Cybersecurity Operations Foundations (Security+ aligned)",
+ "sample": true,
+ "occupation": {
+  "title": "Information Security Analyst",
+  "lot_occupation_name": "Information Security Analysts",
+  "lot_specialized_occupation_name": "Security Operations Center (SOC) Analysts",
+  "soc_crosswalk": "15-1212",
+  "geography": "Maryland, with national comparison",
+  "experience_band": "0-2 years"
+ },
+ "credential": "CompTIA Security+ SY0-801",
+ "sources": [
+  {
+   "id": "SRC-EXAM",
+   "type": "exam_objectives",
+   "title": "Sample source pack: skill statements by Security+ domain (stand-in until the published SY0-801 objectives are loaded at Discovery)",
+   "text": "Domain 1.\nSecurity Controls: Classify a security control by category (technical, managerial, operational, physical) and type (preventive, detective, corrective, deterrent, compensating, directive).\nInformation Security: Explain how confidentiality, integrity, availability, AAA and non-repudiation apply to a workplace system.\nWireshark: Identify protocols, ports and the TCP handshake in a packet capture using Wireshark display filters.\nZero Trust: Describe how zero trust uses policy decision and enforcement points to replace implicit trust.\nMulti-Factor Authentication: Select an MFA method for a use case, including phishing-resistant options, and justify it against NIST SP 800-63B-4.\nHashing: Use hashing to verify file integrity and explain why salting defeats precomputed attacks.\nPublic Key Infrastructure: Generate a key pair and certificate signing request, and inspect a TLS certificate chain.\nDomain 2.\nThreat Intelligence: Compare threat actors by motive, resources and capability.\nMalware Analysis: Identify malware, password, application and network attacks from their indicators.\nPhishing: Analyze a suspicious email's headers and SPF, DKIM and DMARC results to decide whether it is phishing.\nMITRE ATT&CK Framework: Map an observed attack behavior to a MITRE ATT&CK technique with supporting evidence.\nAI Security: Explain AI-enabled attacks (deepfake voice, AI-written phishing) and attacks on AI assistants (prompt injection), and the controls that counter them.\nCommon Vulnerability Scoring System (CVSS): Prioritize vulnerabilities using CVSS v4.0, CISA KEV status and asset criticality.\nOWASP: Recognize common application weaknesses from the OWASP Top 10.\nDomain 3.\nSubnetting: Calculate IPv4 subnets and spot hosts outside an expected range.\nActive Directory: Configure role-based groups and least-privilege permissions in Active Directory, removing standing admin rights.\nFirewall: Write firewall rules that segment user, server and guest networks by least privilege, and prove them with test traffic.\nCloud Security: Distinguish customer and provider security responsibilities under IaaS, PaaS and SaaS.\nSystem Hardening: Harden a Linux server against a CIS Benchmark and document an accepted exception.\nCloud Infrastructure Security: Identify cloud misconfigurations such as public storage and over-broad roles.\nEndpoint Detection And Response: Explain how endpoint detection and response, backups and high availability support resilience.\nDomain 4.\nIdentity And Access Management (IAM): Apply account lifecycle controls (provisioning, access review, offboarding) to prevent orphaned access.\nVulnerability Scanning: Run discovery and vulnerability scans against authorized hosts with Nmap and Greenbone OpenVAS.\nVulnerability Assessments: Validate scanner findings by hand and remove false positives.\nVulnerability Management: Recommend remediation or a compensating control with an owner, deadline and verification step.\nLog Analysis: Identify which log source (Windows event, firewall, DNS, EDR) answers a given investigative question.\nSecurity Information And Event Management (SIEM): Write and tune a SIEM search for a known attack pattern in Splunk or Security Onion.\nAlert Triage: Triage an alert to a true or false positive decision using log evidence and threat intelligence enrichment.\nSecurity Operations: Document an alert in a ticket that meets SOC Tier 1 standards, and escalate it by defined criteria.\nGenerative Artificial Intelligence: Check AI-assisted triage output against raw evidence before acting on it.\nIncident Response Plan: Apply the NIST SP 800-61 Rev. 3 incident response model, organized by CSF 2.0 functions, to a live incident.\nIncident Response: Choose containment, eradication and recovery actions that balance spread against business impact.\nChain Of Custody: Preserve evidence in order of volatility with chain of custody.\nDigital Forensics: Build an incident timeline from Windows event logs and prefetch artifacts.\nTechnical Writing: Write an incident report with root cause and lessons learned for a leader.\nDomain 5.\nSecurity Policies: Distinguish policies, standards, procedures and guidelines, and apply the right one to a situation.\nRisk Analysis: Calculate SLE, ARO and ALE, and record a risk with a treatment decision in a risk register.\nNIST Cybersecurity Framework: Use a NIST CSF 2.0 profile to rank security improvements for an organization.\nExecutive Communication: Write a security recommendation a non-technical leader can approve, with risk, cost range and the decision needed.\nAcceptable Use Policy: Apply acceptable-use and governance rules to generative AI tools that handle company data."
+  },
+  {
+   "id": "SRC-UMGC",
+   "type": "umgc_outcomes",
+   "title": "Sample source pack: course learning outcomes (stand-in until UMGC outcomes are loaded at Discovery)",
+   "text": "CLO1: Apply core security principles and analyze network traffic to judge what is normal on a workplace network.\nCLO2: Analyze artifacts to recognize threat actors, attack techniques and social engineering, including AI-enabled attacks, and map them to ATT&CK.\nCLO3: Configure least-privilege access, select MFA and apply cryptographic protections to a workplace system.\nCLO4: Find, validate, prioritize and track remediation of vulnerabilities on authorized hosts.\nCLO5: Design segmented networks and harden systems against published benchmarks.\nCLO6: Monitor events in a SIEM, triage alerts to a true or false positive decision and document the decision in a ticket.\nCLO7: Run the incident response lifecycle and preserve evidence with chain of custody.\nCLO8: Apply risk and governance tools and explain security decisions to non-technical leaders."
+  }
+ ],
+ "reference": {
+  "skills": [
+   {
+    "skill_id": "S1.1",
+    "name": "Security Controls",
+    "related": "Cybersecurity",
+    "statement": "Classify a security control by category (technical, managerial, operational, physical) and type (preventive, detective, corrective, deterrent, compensating, directive)",
+    "competency_id": "C1",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "1",
+    "extraction_source": "SY0-801 objectives (1.1, 1.2); UMGC CMIT 320 outcomes; SME panel"
+   },
+   {
+    "skill_id": "S1.2",
+    "name": "Information Security",
+    "related": "Cybersecurity",
+    "statement": "Explain how confidentiality, integrity, availability, AAA and non-repudiation apply to a workplace system",
+    "competency_id": "C1",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "1",
+    "extraction_source": "SY0-801 objectives (1.2); UMGC CMIT 320 outcomes; SME panel"
+   },
+   {
+    "skill_id": "S1.3",
+    "name": "Wireshark",
+    "related": "Network Analysis; Network Security",
+    "statement": "Identify protocols, ports and the TCP handshake in a packet capture using Wireshark display filters",
+    "competency_id": "C1",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "1, 4",
+    "extraction_source": "Maryland postings (software skill); SY0-801 objectives (4.9); SME panel"
+   },
+   {
+    "skill_id": "S1.4",
+    "name": "Subnetting",
+    "related": "Network Security",
+    "statement": "Calculate IPv4 subnets and spot hosts outside an expected range",
+    "competency_id": "C1",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "3",
+    "extraction_source": "SY0-801 objectives (3.2); Maryland postings"
+   },
+   {
+    "skill_id": "S1.5",
+    "name": "Zero Trust",
+    "related": "Network Security",
+    "statement": "Describe how zero trust uses policy decision and enforcement points to replace implicit trust",
+    "competency_id": "C1",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "1",
+    "extraction_source": "SY0-801 objectives (1.2); Maryland postings; SME panel"
+   },
+   {
+    "skill_id": "S2.1",
+    "name": "Threat Intelligence",
+    "related": "Cybersecurity",
+    "statement": "Compare threat actors by motive, resources and capability",
+    "competency_id": "C2",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "2",
+    "extraction_source": "SY0-801 objectives (2.1); SME panel"
+   },
+   {
+    "skill_id": "S2.2",
+    "name": "Malware Analysis",
+    "related": "Network Security; Threat Intelligence",
+    "statement": "Identify malware, password, application and network attacks from their indicators",
+    "competency_id": "C2",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "2",
+    "extraction_source": "SY0-801 objectives (2.4); Maryland postings; SME panel"
+   },
+   {
+    "skill_id": "S2.3",
+    "name": "Phishing",
+    "related": "Email Security",
+    "statement": "Analyze a suspicious email's headers and SPF, DKIM and DMARC results to decide whether it is phishing",
+    "competency_id": "C2",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "2, 4",
+    "extraction_source": "Maryland postings; SY0-801 objectives (2.2, 4.5); employer panel"
+   },
+   {
+    "skill_id": "S2.4",
+    "name": "MITRE ATT&CK Framework",
+    "related": "Threat Intelligence",
+    "statement": "Map an observed attack behavior to a MITRE ATT&CK technique with supporting evidence",
+    "competency_id": "C2",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "2, 4",
+    "extraction_source": "Maryland postings; SY0-801 objectives (2.4, 4.8); SME panel"
+   },
+   {
+    "skill_id": "S2.5",
+    "name": "AI Security",
+    "related": "Social Engineering; Phishing",
+    "statement": "Explain AI-enabled attacks (deepfake voice, AI-written phishing) and attacks on AI assistants (prompt injection), and the controls that counter them",
+    "competency_id": "C2",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "2",
+    "extraction_source": "SY0-801 objectives (2.2 AI-enabled attacks); Maryland postings; SME panel"
+   },
+   {
+    "skill_id": "S3.1",
+    "name": "Active Directory",
+    "related": "Role-Based Access Control; Identity And Access Management (IAM)",
+    "statement": "Configure role-based groups and least-privilege permissions in Active Directory, removing standing admin rights",
+    "competency_id": "C3",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "3, 4",
+    "extraction_source": "Maryland postings; SY0-801 objectives (4.6); UMGC CMIT 320 outcomes; SME panel"
+   },
+   {
+    "skill_id": "S3.2",
+    "name": "Multi-Factor Authentication",
+    "related": "Identity And Access Management (IAM)",
+    "statement": "Select an MFA method for a use case, including phishing-resistant options, and justify it against NIST SP 800-63B-4",
+    "competency_id": "C3",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "1, 4",
+    "extraction_source": "SY0-801 objectives (4.6); Maryland postings; SME panel"
+   },
+   {
+    "skill_id": "S3.3",
+    "name": "Identity And Access Management (IAM)",
+    "related": "Active Directory",
+    "statement": "Apply account lifecycle controls (provisioning, access review, offboarding) to prevent orphaned access",
+    "competency_id": "C3",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "4",
+    "extraction_source": "SY0-801 objectives (4.6); SME panel"
+   },
+   {
+    "skill_id": "S3.4",
+    "name": "Hashing",
+    "related": "Cryptography",
+    "statement": "Use hashing to verify file integrity and explain why salting defeats precomputed attacks",
+    "competency_id": "C3",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "1",
+    "extraction_source": "SY0-801 objectives (1.4); UMGC CMIT 320 outcomes; SME panel"
+   },
+   {
+    "skill_id": "S3.5",
+    "name": "Public Key Infrastructure",
+    "related": "Transport Layer Security (TLS); Cryptography",
+    "statement": "Generate a key pair and certificate signing request, and inspect a TLS certificate chain",
+    "competency_id": "C3",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "1, 3",
+    "extraction_source": "SY0-801 objectives (1.4, 3.3); SME panel"
+   },
+   {
+    "skill_id": "S4.1",
+    "name": "Vulnerability Scanning",
+    "related": "Nmap",
+    "statement": "Run discovery and vulnerability scans against authorized hosts with Nmap and Greenbone OpenVAS",
+    "competency_id": "C4",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4",
+    "extraction_source": "Maryland postings; SY0-801 objectives (4.3); SME panel"
+   },
+   {
+    "skill_id": "S4.2",
+    "name": "Vulnerability Assessments",
+    "related": "Vulnerability Management",
+    "statement": "Validate scanner findings by hand and remove false positives",
+    "competency_id": "C4",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4",
+    "extraction_source": "SY0-801 objectives (4.3); employer panel; SME panel"
+   },
+   {
+    "skill_id": "S4.3",
+    "name": "Common Vulnerability Scoring System (CVSS)",
+    "related": "Vulnerability Management",
+    "statement": "Prioritize vulnerabilities using CVSS v4.0, CISA KEV status and asset criticality",
+    "competency_id": "C4",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "2, 4",
+    "extraction_source": "SY0-801 objectives (2.3, 4.3); Maryland postings; SME panel"
+   },
+   {
+    "skill_id": "S4.4",
+    "name": "Vulnerability Management",
+    "related": "Risk Management",
+    "statement": "Recommend remediation or a compensating control with an owner, deadline and verification step",
+    "competency_id": "C4",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4",
+    "extraction_source": "SY0-801 objectives (4.3); UMGC CMIT 320 outcomes; Maryland postings"
+   },
+   {
+    "skill_id": "S4.5",
+    "name": "OWASP",
+    "related": "Application Security",
+    "statement": "Recognize common application weaknesses from the OWASP Top 10",
+    "competency_id": "C4",
+    "tier": "Awareness",
+    "exit_level": "Aware",
+    "credential_domain": "2",
+    "extraction_source": "SY0-801 objectives (2.3); SME panel"
+   },
+   {
+    "skill_id": "S5.1",
+    "name": "Firewall",
+    "related": "Network Segmentation; Network Security",
+    "statement": "Write firewall rules that segment user, server and guest networks by least privilege, and prove them with test traffic",
+    "competency_id": "C5",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "3",
+    "extraction_source": "Maryland postings; UMGC CMIT 320 outcomes; SY0-801 objectives (3.2, 4.5)"
+   },
+   {
+    "skill_id": "S5.2",
+    "name": "Cloud Security",
+    "related": "Cloud Computing",
+    "statement": "Distinguish customer and provider security responsibilities under IaaS, PaaS and SaaS",
+    "competency_id": "C5",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "3",
+    "extraction_source": "SY0-801 objectives (3.1); Maryland postings; SME panel"
+   },
+   {
+    "skill_id": "S5.3",
+    "name": "System Hardening",
+    "related": "CIS Benchmarks; Linux",
+    "statement": "Harden a Linux server against a CIS Benchmark and document an accepted exception",
+    "competency_id": "C5",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "3, 4",
+    "extraction_source": "SY0-801 objectives (4.1); Maryland postings; SME panel"
+   },
+   {
+    "skill_id": "S5.4",
+    "name": "Cloud Infrastructure Security",
+    "related": "Cloud Security",
+    "statement": "Identify cloud misconfigurations such as public storage and over-broad roles",
+    "competency_id": "C5",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "3",
+    "extraction_source": "Maryland postings; SY0-801 objectives (2.3, 3.1)"
+   },
+   {
+    "skill_id": "S5.5",
+    "name": "Endpoint Detection And Response",
+    "related": "Business Continuity; Backup Solutions",
+    "statement": "Explain how endpoint detection and response, backups and high availability support resilience",
+    "competency_id": "C5",
+    "tier": "Awareness",
+    "exit_level": "Aware",
+    "credential_domain": "3",
+    "extraction_source": "SY0-801 objectives (3.4, 4.5); SME panel"
+   },
+   {
+    "skill_id": "S6.1",
+    "name": "Log Analysis",
+    "related": "Security Operations",
+    "statement": "Identify which log source (Windows event, firewall, DNS, EDR) answers a given investigative question",
+    "competency_id": "C6",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4",
+    "extraction_source": "Maryland postings; SY0-801 objectives (4.9); SME panel"
+   },
+   {
+    "skill_id": "S6.2",
+    "name": "Security Information And Event Management (SIEM)",
+    "related": "Splunk; Log Analysis",
+    "statement": "Write and tune a SIEM search for a known attack pattern in Splunk or Security Onion",
+    "competency_id": "C6",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4",
+    "extraction_source": "Maryland postings (software skill); SY0-801 objectives (4.4); SME panel"
+   },
+   {
+    "skill_id": "S6.3",
+    "name": "Alert Triage",
+    "related": "Security Operations; Threat Intelligence",
+    "statement": "Triage an alert to a true or false positive decision using log evidence and threat intelligence enrichment",
+    "competency_id": "C6",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4",
+    "extraction_source": "SY0-801 objectives (4.4, 4.8); Maryland postings; employer panel"
+   },
+   {
+    "skill_id": "S6.4",
+    "name": "Security Operations",
+    "related": "Incident Ticketing; Technical Writing",
+    "statement": "Document an alert in a ticket that meets SOC Tier 1 standards, and escalate it by defined criteria",
+    "competency_id": "C6",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4",
+    "extraction_source": "Employer panel; Maryland postings; SY0-801 objectives (4.8)"
+   },
+   {
+    "skill_id": "S6.5",
+    "name": "Generative Artificial Intelligence",
+    "related": "Security Operations",
+    "statement": "Check AI-assisted triage output against raw evidence before acting on it",
+    "competency_id": "C6",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "4",
+    "extraction_source": "SY0-801 objectives (4.7 automation); employer panel; SME panel"
+   },
+   {
+    "skill_id": "S7.1",
+    "name": "Incident Response Plan",
+    "related": "Incident Response; NIST Cybersecurity Framework",
+    "statement": "Apply the NIST SP 800-61 Rev. 3 incident response model, organized by CSF 2.0 functions, to a live incident",
+    "competency_id": "C7",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4",
+    "extraction_source": "SY0-801 objectives (4.8); SME panel; UMGC CMIT 320 outcomes"
+   },
+   {
+    "skill_id": "S7.2",
+    "name": "Incident Response",
+    "related": "Incident Response Plan",
+    "statement": "Choose containment, eradication and recovery actions that balance spread against business impact",
+    "competency_id": "C7",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4",
+    "extraction_source": "SY0-801 objectives (4.8); Maryland postings; SME panel"
+   },
+   {
+    "skill_id": "S7.3",
+    "name": "Chain Of Custody",
+    "related": "Digital Forensics",
+    "statement": "Preserve evidence in order of volatility with chain of custody",
+    "competency_id": "C7",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "4",
+    "extraction_source": "SY0-801 objectives (4.8); SME panel"
+   },
+   {
+    "skill_id": "S7.4",
+    "name": "Digital Forensics",
+    "related": "Log Analysis",
+    "statement": "Build an incident timeline from Windows event logs and prefetch artifacts",
+    "competency_id": "C7",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4",
+    "extraction_source": "Maryland postings; SY0-801 objectives (4.8, 4.9); SME panel"
+   },
+   {
+    "skill_id": "S7.5",
+    "name": "Technical Writing",
+    "related": "Incident Response; Executive Communication",
+    "statement": "Write an incident report with root cause and lessons learned for a leader",
+    "competency_id": "C7",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "4, 5",
+    "extraction_source": "Employer panel; SY0-801 objectives (4.8, 5.1); Maryland postings"
+   },
+   {
+    "skill_id": "S8.1",
+    "name": "Security Policies",
+    "related": "Governance",
+    "statement": "Distinguish policies, standards, procedures and guidelines, and apply the right one to a situation",
+    "competency_id": "C8",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "5",
+    "extraction_source": "SY0-801 objectives (5.1); SME panel"
+   },
+   {
+    "skill_id": "S8.2",
+    "name": "Risk Analysis",
+    "related": "Risk Register; Risk Management",
+    "statement": "Calculate SLE, ARO and ALE, and record a risk with a treatment decision in a risk register",
+    "competency_id": "C8",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "5",
+    "extraction_source": "SY0-801 objectives (5.2); UMGC CMIT 320 outcomes; SME panel"
+   },
+   {
+    "skill_id": "S8.3",
+    "name": "NIST Cybersecurity Framework",
+    "related": "Risk Management; Security Policies",
+    "statement": "Use a NIST CSF 2.0 profile to rank security improvements for an organization",
+    "competency_id": "C8",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "5",
+    "extraction_source": "SY0-801 objectives (5.1); Maryland postings; SME panel"
+   },
+   {
+    "skill_id": "S8.4",
+    "name": "Executive Communication",
+    "related": "Technical Writing",
+    "statement": "Write a security recommendation a non-technical leader can approve, with risk, cost range and the decision needed",
+    "competency_id": "C8",
+    "tier": "Core",
+    "exit_level": "Proficient",
+    "credential_domain": "5",
+    "extraction_source": "Employer panel; SY0-801 objectives (5.1, 5.6); SME panel"
+   },
+   {
+    "skill_id": "S8.5",
+    "name": "Acceptable Use Policy",
+    "related": "Security Policies; Generative Artificial Intelligence",
+    "statement": "Apply acceptable-use and governance rules to generative AI tools that handle company data",
+    "competency_id": "C8",
+    "tier": "Supporting",
+    "exit_level": "Working",
+    "credential_domain": "5",
+    "extraction_source": "SY0-801 objectives (5.1, 5.4); SME panel"
+   }
+  ],
+  "competencies": [
+   {
+    "competency_id": "C1",
+    "name": "Security foundations and networking",
+    "definition": "Applies core security principles and reads network traffic to judge what is normal",
+    "exit_level": "Proficient",
+    "performance_criteria": "Classifies controls correctly; identifies protocol, port and handshake in a capture",
+    "evidence": "Lab 1, KC1, capstone",
+    "skill_ids": [
+     "S1.1",
+     "S1.2",
+     "S1.3",
+     "S1.4",
+     "S1.5"
+    ]
+   },
+   {
+    "competency_id": "C2",
+    "name": "Threat and attack analysis",
+    "definition": "Recognizes threat actors, attack techniques and social engineering, including AI-enabled attacks",
+    "exit_level": "Proficient",
+    "performance_criteria": "Maps a real artifact (email, log) to an ATT&CK technique with evidence",
+    "evidence": "Lab 2, Discussion 2, capstone",
+    "skill_ids": [
+     "S2.1",
+     "S2.2",
+     "S2.3",
+     "S2.4",
+     "S2.5"
+    ]
+   },
+   {
+    "competency_id": "C3",
+    "name": "Identity, access and cryptography",
+    "definition": "Configures least-privilege access, MFA and cryptographic protections",
+    "exit_level": "Proficient",
+    "performance_criteria": "Builds role-based access with no standing admin rights; verifies integrity and certificates",
+    "evidence": "Labs 3a and 3b, practice exams, capstone",
+    "skill_ids": [
+     "S3.1",
+     "S3.2",
+     "S3.3",
+     "S3.4",
+     "S3.5"
+    ]
+   },
+   {
+    "competency_id": "C4",
+    "name": "Vulnerability management",
+    "definition": "Finds, validates, prioritizes and tracks remediation of vulnerabilities",
+    "exit_level": "Proficient",
+    "performance_criteria": "Removes false positives; ranks by CVSS, KEV and asset value; sets owner and deadline",
+    "evidence": "Lab 4, Vulnerability Assessment Report, capstone",
+    "skill_ids": [
+     "S4.1",
+     "S4.2",
+     "S4.3",
+     "S4.4",
+     "S4.5"
+    ]
+   },
+   {
+    "competency_id": "C5",
+    "name": "Secure architecture and hardening",
+    "definition": "Designs segmented networks and hardens systems against benchmarks",
+    "exit_level": "Working to Proficient",
+    "performance_criteria": "Writes firewall rules that enforce least privilege; fixes benchmark findings and documents exceptions",
+    "evidence": "Labs 5a and 5b, capstone",
+    "skill_ids": [
+     "S5.1",
+     "S5.2",
+     "S5.3",
+     "S5.4",
+     "S5.5"
+    ]
+   },
+   {
+    "competency_id": "C6",
+    "name": "Security monitoring and alert triage",
+    "definition": "Monitors events in a SIEM, triages alerts and documents decisions",
+    "exit_level": "Proficient",
+    "performance_criteria": "Reaches the right true or false positive call with log evidence; writes a ticket another analyst can act on",
+    "evidence": "Lab 6, tickets, capstone",
+    "skill_ids": [
+     "S6.1",
+     "S6.2",
+     "S6.3",
+     "S6.4",
+     "S6.5"
+    ]
+   },
+   {
+    "competency_id": "C7",
+    "name": "Incident response and evidence handling",
+    "definition": "Runs the incident response lifecycle and preserves evidence",
+    "exit_level": "Working to Proficient",
+    "performance_criteria": "Builds an evidence-based timeline; chooses safe containment; keeps chain of custody",
+    "evidence": "Forensics lab, Incident Response Report, capstone",
+    "skill_ids": [
+     "S7.1",
+     "S7.2",
+     "S7.3",
+     "S7.4",
+     "S7.5"
+    ]
+   },
+   {
+    "competency_id": "C8",
+    "name": "Governance, risk and communication",
+    "definition": "Applies risk and governance tools and explains security to non-technical leaders",
+    "exit_level": "Proficient",
+    "performance_criteria": "Builds a risk register entry with ALE; writes a ranked recommendation a leader can approve",
+    "evidence": "Capstone executive brief, KC8",
+    "skill_ids": [
+     "S8.1",
+     "S8.2",
+     "S8.3",
+     "S8.4",
+     "S8.5"
+    ]
+   }
+  ],
+  "objectives": [
+   {
+    "objective_id": "CLO1",
+    "level": "CLO",
+    "statement": "Apply core security principles and analyze network traffic to judge what is normal on a workplace network",
+    "bloom_level": "Analyze",
+    "competency_id": "C1",
+    "skill_ids": [
+     "S1.1",
+     "S1.2",
+     "S1.3",
+     "S1.4",
+     "S1.5"
+    ],
+    "module_ids": [
+     "1.1",
+     "1.2",
+     "1.3",
+     "1.4",
+     "1.5",
+     "1.6"
+    ]
+   },
+   {
+    "objective_id": "1.1",
+    "level": "module objective",
+    "statement": "Classify a given security control by category and type, and explain which CIA, AAA or non-repudiation goal it serves",
+    "bloom_level": "Understand",
+    "competency_id": "C1",
+    "skill_ids": [
+     "S1.1",
+     "S1.2"
+    ],
+    "module_ids": [
+     "1.1"
+    ]
+   },
+   {
+    "objective_id": "1.2",
+    "level": "module objective",
+    "statement": "Identify protocols, ports and the TCP handshake in a packet capture using Wireshark display filters",
+    "bloom_level": "Apply",
+    "competency_id": "C1",
+    "skill_ids": [
+     "S1.3"
+    ],
+    "module_ids": [
+     "1.2",
+     "1.4"
+    ]
+   },
+   {
+    "objective_id": "1.3",
+    "level": "module objective",
+    "statement": "Calculate IPv4 subnet ranges and flag hosts outside the expected range",
+    "bloom_level": "Apply",
+    "competency_id": "C1",
+    "skill_ids": [
+     "S1.4"
+    ],
+    "module_ids": [
+     "1.2",
+     "1.6"
+    ]
+   },
+   {
+    "objective_id": "1.4",
+    "level": "module objective",
+    "statement": "Describe how zero trust policy decision and enforcement points replace implicit trust in a given network",
+    "bloom_level": "Understand",
+    "competency_id": "C1",
+    "skill_ids": [
+     "S1.5"
+    ],
+    "module_ids": [
+     "1.3",
+     "1.5"
+    ]
+   },
+   {
+    "objective_id": "CLO2",
+    "level": "CLO",
+    "statement": "Analyze artifacts to recognize threat actors, attack techniques and social engineering, including AI-enabled attacks, and map them to ATT&CK",
+    "bloom_level": "Analyze",
+    "competency_id": "C2",
+    "skill_ids": [
+     "S2.1",
+     "S2.2",
+     "S2.3",
+     "S2.4",
+     "S2.5"
+    ],
+    "module_ids": [
+     "2.1",
+     "2.2",
+     "2.3",
+     "2.4",
+     "6.2"
+    ]
+   },
+   {
+    "objective_id": "2.1",
+    "level": "module objective",
+    "statement": "Compare threat actors by motive, resources and capability for a given scenario",
+    "bloom_level": "Analyze",
+    "competency_id": "C2",
+    "skill_ids": [
+     "S2.1"
+    ],
+    "module_ids": [
+     "2.1"
+    ]
+   },
+   {
+    "objective_id": "2.2",
+    "level": "module objective",
+    "statement": "Identify malware, password, application and network attacks from their indicators",
+    "bloom_level": "Analyze",
+    "competency_id": "C2",
+    "skill_ids": [
+     "S2.2"
+    ],
+    "module_ids": [
+     "2.2"
+    ]
+   },
+   {
+    "objective_id": "2.3",
+    "level": "module objective",
+    "statement": "Analyze email headers and SPF, DKIM and DMARC results to decide whether a message is phishing, and map the behavior to an ATT&CK technique with evidence",
+    "bloom_level": "Analyze",
+    "competency_id": "C2",
+    "skill_ids": [
+     "S2.3",
+     "S2.4"
+    ],
+    "module_ids": [
+     "2.4",
+     "2.5"
+    ]
+   },
+   {
+    "objective_id": "2.4",
+    "level": "module objective",
+    "statement": "Explain AI-enabled attacks and attacks on AI assistants, and name the controls that counter them",
+    "bloom_level": "Understand",
+    "competency_id": "C2",
+    "skill_ids": [
+     "S2.5"
+    ],
+    "module_ids": [
+     "2.3"
+    ]
+   },
+   {
+    "objective_id": "CLO3",
+    "level": "CLO",
+    "statement": "Configure least-privilege access, select MFA and apply cryptographic protections to a workplace system",
+    "bloom_level": "Apply",
+    "competency_id": "C3",
+    "skill_ids": [
+     "S3.1",
+     "S3.2",
+     "S3.3",
+     "S3.4",
+     "S3.5"
+    ],
+    "module_ids": [
+     "3.1",
+     "3.2",
+     "3.3",
+     "3.4",
+     "3.5",
+     "3.6"
+    ]
+   },
+   {
+    "objective_id": "3.1",
+    "level": "module objective",
+    "statement": "Select and justify an MFA method against NIST SP 800-63B-4 and apply account lifecycle controls to prevent orphaned access",
+    "bloom_level": "Evaluate",
+    "competency_id": "C3",
+    "skill_ids": [
+     "S3.2",
+     "S3.3"
+    ],
+    "module_ids": [
+     "3.1",
+     "3.5"
+    ]
+   },
+   {
+    "objective_id": "3.2",
+    "level": "module objective",
+    "statement": "Configure role-based groups and least-privilege permissions in Active Directory without standing admin rights",
+    "bloom_level": "Apply",
+    "competency_id": "C3",
+    "skill_ids": [
+     "S3.1"
+    ],
+    "module_ids": [
+     "3.4"
+    ]
+   },
+   {
+    "objective_id": "3.3",
+    "level": "module objective",
+    "statement": "Verify file integrity with hashing, generate a key pair and CSR, and inspect a TLS certificate chain",
+    "bloom_level": "Apply",
+    "competency_id": "C3",
+    "skill_ids": [
+     "S3.4",
+     "S3.5"
+    ],
+    "module_ids": [
+     "3.2",
+     "3.3",
+     "3.6"
+    ]
+   },
+   {
+    "objective_id": "CLO4",
+    "level": "CLO",
+    "statement": "Find, validate, prioritize and track remediation of vulnerabilities on authorized hosts",
+    "bloom_level": "Evaluate",
+    "competency_id": "C4",
+    "skill_ids": [
+     "S4.1",
+     "S4.2",
+     "S4.3",
+     "S4.4",
+     "S4.5"
+    ],
+    "module_ids": [
+     "4.1",
+     "4.2",
+     "4.3",
+     "4.4",
+     "4.5"
+    ]
+   },
+   {
+    "objective_id": "4.1",
+    "level": "module objective",
+    "statement": "Run discovery and vulnerability scans against authorized hosts and validate the findings by hand",
+    "bloom_level": "Apply",
+    "competency_id": "C4",
+    "skill_ids": [
+     "S4.1",
+     "S4.2"
+    ],
+    "module_ids": [
+     "4.1",
+     "4.4"
+    ]
+   },
+   {
+    "objective_id": "4.2",
+    "level": "module objective",
+    "statement": "Prioritize vulnerabilities using CVSS v4.0, CISA KEV status and asset criticality",
+    "bloom_level": "Evaluate",
+    "competency_id": "C4",
+    "skill_ids": [
+     "S4.3"
+    ],
+    "module_ids": [
+     "4.2",
+     "4.5"
+    ]
+   },
+   {
+    "objective_id": "4.3",
+    "level": "module objective",
+    "statement": "Recommend remediation or a compensating control with owner, deadline and verification, and recognize OWASP Top 10 weaknesses",
+    "bloom_level": "Evaluate",
+    "competency_id": "C4",
+    "skill_ids": [
+     "S4.4",
+     "S4.5"
+    ],
+    "module_ids": [
+     "4.3"
+    ]
+   },
+   {
+    "objective_id": "CLO5",
+    "level": "CLO",
+    "statement": "Design segmented networks and harden systems against published benchmarks",
+    "bloom_level": "Apply",
+    "competency_id": "C5",
+    "skill_ids": [
+     "S5.1",
+     "S5.2",
+     "S5.3",
+     "S5.4",
+     "S5.5"
+    ],
+    "module_ids": [
+     "5.1",
+     "5.2",
+     "5.3",
+     "5.4",
+     "5.5",
+     "5.6"
+    ]
+   },
+   {
+    "objective_id": "5.1",
+    "level": "module objective",
+    "statement": "Write and test firewall rules that segment user, server and guest networks by least privilege",
+    "bloom_level": "Apply",
+    "competency_id": "C5",
+    "skill_ids": [
+     "S5.1"
+    ],
+    "module_ids": [
+     "5.1",
+     "5.4"
+    ]
+   },
+   {
+    "objective_id": "5.2",
+    "level": "module objective",
+    "statement": "Distinguish customer and provider responsibilities across IaaS, PaaS and SaaS and identify common cloud misconfigurations",
+    "bloom_level": "Analyze",
+    "competency_id": "C5",
+    "skill_ids": [
+     "S5.2",
+     "S5.4"
+    ],
+    "module_ids": [
+     "5.2",
+     "5.5"
+    ]
+   },
+   {
+    "objective_id": "5.3",
+    "level": "module objective",
+    "statement": "Harden a Linux server against a CIS Benchmark, document exceptions, and explain how EDR, backups and high availability support resilience",
+    "bloom_level": "Apply",
+    "competency_id": "C5",
+    "skill_ids": [
+     "S5.3",
+     "S5.5"
+    ],
+    "module_ids": [
+     "5.3",
+     "5.6"
+    ]
+   },
+   {
+    "objective_id": "CLO6",
+    "level": "CLO",
+    "statement": "Monitor events in a SIEM, triage alerts to a true or false positive decision and document the decision in a ticket",
+    "bloom_level": "Evaluate",
+    "competency_id": "C6",
+    "skill_ids": [
+     "S6.1",
+     "S6.2",
+     "S6.3",
+     "S6.4",
+     "S6.5"
+    ],
+    "module_ids": [
+     "6.1",
+     "6.2",
+     "6.3",
+     "6.4"
+    ]
+   },
+   {
+    "objective_id": "6.1",
+    "level": "module objective",
+    "statement": "Identify the log source that answers a given investigative question",
+    "bloom_level": "Analyze",
+    "competency_id": "C6",
+    "skill_ids": [
+     "S6.1"
+    ],
+    "module_ids": [
+     "6.1"
+    ]
+   },
+   {
+    "objective_id": "6.2",
+    "level": "module objective",
+    "statement": "Write and tune a SIEM search for a known attack pattern, map hits to ATT&CK, and check AI-assisted output against raw evidence",
+    "bloom_level": "Apply",
+    "competency_id": "C6",
+    "skill_ids": [
+     "S6.2",
+     "S6.5",
+     "S2.4"
+    ],
+    "module_ids": [
+     "6.2",
+     "6.4"
+    ]
+   },
+   {
+    "objective_id": "6.3",
+    "level": "module objective",
+    "statement": "Triage an alert to a true or false positive decision with log evidence and threat intelligence, and document it in a SOC Tier 1 ticket with escalation",
+    "bloom_level": "Evaluate",
+    "competency_id": "C6",
+    "skill_ids": [
+     "S6.3",
+     "S6.4"
+    ],
+    "module_ids": [
+     "6.3",
+     "6.4",
+     "6.5"
+    ]
+   },
+   {
+    "objective_id": "CLO7",
+    "level": "CLO",
+    "statement": "Run the incident response lifecycle and preserve evidence with chain of custody",
+    "bloom_level": "Apply",
+    "competency_id": "C7",
+    "skill_ids": [
+     "S7.1",
+     "S7.2",
+     "S7.3",
+     "S7.4",
+     "S7.5"
+    ],
+    "module_ids": [
+     "7.1",
+     "7.2",
+     "7.3",
+     "7.4",
+     "7.5"
+    ]
+   },
+   {
+    "objective_id": "7.1",
+    "level": "module objective",
+    "statement": "Apply the NIST SP 800-61r3 incident response model, organized by CSF 2.0 functions, to a live incident",
+    "bloom_level": "Apply",
+    "competency_id": "C7",
+    "skill_ids": [
+     "S7.1"
+    ],
+    "module_ids": [
+     "7.1",
+     "7.5"
+    ]
+   },
+   {
+    "objective_id": "7.2",
+    "level": "module objective",
+    "statement": "Choose containment, eradication and recovery actions that balance spread against business impact",
+    "bloom_level": "Evaluate",
+    "competency_id": "C7",
+    "skill_ids": [
+     "S7.2"
+    ],
+    "module_ids": [
+     "7.2",
+     "7.5"
+    ]
+   },
+   {
+    "objective_id": "7.3",
+    "level": "module objective",
+    "statement": "Preserve evidence in order of volatility with chain of custody and build an incident timeline from Windows event logs and prefetch artifacts",
+    "bloom_level": "Analyze",
+    "competency_id": "C7",
+    "skill_ids": [
+     "S7.3",
+     "S7.4"
+    ],
+    "module_ids": [
+     "7.3",
+     "7.4"
+    ]
+   },
+   {
+    "objective_id": "7.4",
+    "level": "module objective",
+    "statement": "Write an incident report with root cause and lessons learned for a leader",
+    "bloom_level": "Create",
+    "competency_id": "C7",
+    "skill_ids": [
+     "S7.5"
+    ],
+    "module_ids": [
+     "7.3"
+    ]
+   },
+   {
+    "objective_id": "CLO8",
+    "level": "CLO",
+    "statement": "Apply risk and governance tools and explain security decisions to non-technical leaders",
+    "bloom_level": "Evaluate",
+    "competency_id": "C8",
+    "skill_ids": [
+     "S8.1",
+     "S8.2",
+     "S8.3",
+     "S8.4",
+     "S8.5"
+    ],
+    "module_ids": [
+     "2.6",
+     "8.1",
+     "8.2",
+     "8.3",
+     "8.4"
+    ]
+   },
+   {
+    "objective_id": "8.1",
+    "level": "module objective",
+    "statement": "Distinguish policies, standards, procedures and guidelines, and use a NIST CSF 2.0 profile to rank security improvements",
+    "bloom_level": "Evaluate",
+    "competency_id": "C8",
+    "skill_ids": [
+     "S8.1",
+     "S8.3"
+    ],
+    "module_ids": [
+     "8.1"
+    ]
+   },
+   {
+    "objective_id": "8.2",
+    "level": "module objective",
+    "statement": "Calculate SLE, ARO and ALE and record a risk with a treatment decision in a risk register",
+    "bloom_level": "Apply",
+    "competency_id": "C8",
+    "skill_ids": [
+     "S8.2"
+    ],
+    "module_ids": [
+     "8.2"
+    ]
+   },
+   {
+    "objective_id": "8.3",
+    "level": "module objective",
+    "statement": "Write a security recommendation a non-technical leader can approve, with risk, cost range and the decision needed",
+    "bloom_level": "Create",
+    "competency_id": "C8",
+    "skill_ids": [
+     "S8.4"
+    ],
+    "module_ids": [
+     "2.6",
+     "8.2",
+     "8.4",
+     "8.6"
+    ]
+   },
+   {
+    "objective_id": "8.4",
+    "level": "module objective",
+    "statement": "Apply acceptable-use and governance rules to generative AI tools that handle company data",
+    "bloom_level": "Apply",
+    "competency_id": "C8",
+    "skill_ids": [
+     "S8.5"
+    ],
+    "module_ids": [
+     "8.3"
+    ]
+   }
+  ],
+  "courses": [
+   {
+    "course_id": "CRS1",
+    "name": "Course 1 (Week 1): Security Foundations and Networks",
+    "learner_hours": 22.5,
+    "online_hours": 7.5,
+    "reading_hours": 5.0,
+    "practice_hours": 10.0,
+    "assessment_ids": [
+     "KC1",
+     "DISC1",
+     "LAB1"
+    ],
+    "modules": [
+     {
+      "module_id": "1.1",
+      "title": "Lesson 1.1: Security principles and control classification",
+      "type": "lesson",
+      "objective_ids": [
+       "1.1"
+      ],
+      "skill_ids": [
+       "S1.1",
+       "S1.2"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "1.2",
+      "title": "Lesson 1.2: Protocols, ports and IPv4 addressing",
+      "type": "lesson",
+      "objective_ids": [
+       "1.2",
+       "1.3"
+      ],
+      "skill_ids": [
+       "S1.3",
+       "S1.4"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "1.3",
+      "title": "Lesson 1.3: Zero trust and modern network trust models",
+      "type": "lesson",
+      "objective_ids": [
+       "1.4"
+      ],
+      "skill_ids": [
+       "S1.5"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "1.4",
+      "title": "Wireshark clinic (Lab 1)",
+      "type": "clinic",
+      "objective_ids": [
+       "1.2"
+      ],
+      "skill_ids": [
+       "S1.3"
+      ],
+      "assessment_ids": [
+       "LAB1"
+      ]
+     },
+     {
+      "module_id": "1.5",
+      "title": "Tidewater SOC scenario: what is normal on this network",
+      "type": "scenario",
+      "objective_ids": [
+       "1.4"
+      ],
+      "skill_ids": [
+       "S1.5"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "1.6",
+      "title": "AI tutor subnet drills",
+      "type": "drill",
+      "objective_ids": [
+       "1.3"
+      ],
+      "skill_ids": [
+       "S1.4"
+      ],
+      "assessment_ids": []
+     }
+    ]
+   },
+   {
+    "course_id": "CRS2",
+    "name": "Course 2 (Week 2): The Threat Landscape",
+    "learner_hours": 22.5,
+    "online_hours": 7.5,
+    "reading_hours": 5.0,
+    "practice_hours": 10.0,
+    "assessment_ids": [
+     "KC2",
+     "DISC2",
+     "LAB2"
+    ],
+    "modules": [
+     {
+      "module_id": "2.1",
+      "title": "Lesson 2.1: Threat actors and motives",
+      "type": "lesson",
+      "objective_ids": [
+       "2.1"
+      ],
+      "skill_ids": [
+       "S2.1"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "2.2",
+      "title": "Lesson 2.2: Attack types and their indicators",
+      "type": "lesson",
+      "objective_ids": [
+       "2.2"
+      ],
+      "skill_ids": [
+       "S2.2"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "2.3",
+      "title": "Lesson 2.3: Social engineering and AI-enabled attacks",
+      "type": "lesson",
+      "objective_ids": [
+       "2.4"
+      ],
+      "skill_ids": [
+       "S2.5"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "2.4",
+      "title": "Email header clinic and ATT&CK mapping (Lab 2)",
+      "type": "clinic",
+      "objective_ids": [
+       "2.3"
+      ],
+      "skill_ids": [
+       "S2.3",
+       "S2.4"
+      ],
+      "assessment_ids": [
+       "LAB2"
+      ]
+     },
+     {
+      "module_id": "2.5",
+      "title": "Password-reset scenario: branching social engineering case",
+      "type": "scenario",
+      "objective_ids": [
+       "2.3"
+      ],
+      "skill_ids": [],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "2.6",
+      "title": "Threat brief writing exercise (first draft of writing for leaders)",
+      "type": "clinic",
+      "objective_ids": [
+       "8.3"
+      ],
+      "skill_ids": [
+       "S8.4"
+      ],
+      "assessment_ids": []
+     }
+    ]
+   },
+   {
+    "course_id": "CRS3",
+    "name": "Course 3 (Week 3): Identity, Access, and Cryptography",
+    "learner_hours": 22.5,
+    "online_hours": 7.5,
+    "reading_hours": 5.0,
+    "practice_hours": 10.0,
+    "assessment_ids": [
+     "KC3",
+     "DISC3",
+     "LAB3A",
+     "LAB3B",
+     "PEA"
+    ],
+    "modules": [
+     {
+      "module_id": "3.1",
+      "title": "Lesson 3.1: Authentication, MFA and account lifecycle",
+      "type": "lesson",
+      "objective_ids": [
+       "3.1"
+      ],
+      "skill_ids": [
+       "S3.2",
+       "S3.3"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "3.2",
+      "title": "Lesson 3.2: Hashing, salting and integrity",
+      "type": "lesson",
+      "objective_ids": [
+       "3.3"
+      ],
+      "skill_ids": [
+       "S3.4"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "3.3",
+      "title": "Lesson 3.3: PKI, certificates and TLS",
+      "type": "lesson",
+      "objective_ids": [
+       "3.3"
+      ],
+      "skill_ids": [
+       "S3.5"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "3.4",
+      "title": "Group Policy and least-privilege clinic (Lab 3a)",
+      "type": "clinic",
+      "objective_ids": [
+       "3.2"
+      ],
+      "skill_ids": [
+       "S3.1"
+      ],
+      "assessment_ids": [
+       "LAB3A"
+      ]
+     },
+     {
+      "module_id": "3.5",
+      "title": "Offboarding scenario: finding orphaned access",
+      "type": "scenario",
+      "objective_ids": [
+       "3.1"
+      ],
+      "skill_ids": [
+       "S3.3"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "3.6",
+      "title": "Cryptography lab: hashes, key pairs and certificate chains (Lab 3b)",
+      "type": "lab",
+      "objective_ids": [
+       "3.3"
+      ],
+      "skill_ids": [
+       "S3.4",
+       "S3.5"
+      ],
+      "assessment_ids": [
+       "LAB3B"
+      ]
+     }
+    ]
+   },
+   {
+    "course_id": "CRS4",
+    "name": "Course 4 (Week 4): Vulnerability Management",
+    "learner_hours": 22.5,
+    "online_hours": 7.5,
+    "reading_hours": 5.0,
+    "practice_hours": 10.0,
+    "assessment_ids": [
+     "KC4",
+     "DISC4",
+     "LAB4",
+     "VAR"
+    ],
+    "modules": [
+     {
+      "module_id": "4.1",
+      "title": "Lesson 4.1: Scanning and validating findings",
+      "type": "lesson",
+      "objective_ids": [
+       "4.1"
+      ],
+      "skill_ids": [
+       "S4.2"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "4.2",
+      "title": "Lesson 4.2: Prioritization with CVSS v4.0, KEV and asset value",
+      "type": "lesson",
+      "objective_ids": [
+       "4.2"
+      ],
+      "skill_ids": [
+       "S4.3"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "4.3",
+      "title": "Lesson 4.3: Remediation, compensating controls and application weaknesses",
+      "type": "lesson",
+      "objective_ids": [
+       "4.3"
+      ],
+      "skill_ids": [
+       "S4.4",
+       "S4.5"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "4.4",
+      "title": "Scan report clinic (Lab 4)",
+      "type": "clinic",
+      "objective_ids": [
+       "4.1"
+      ],
+      "skill_ids": [
+       "S4.1",
+       "S4.2"
+      ],
+      "assessment_ids": [
+       "LAB4"
+      ]
+     },
+     {
+      "module_id": "4.5",
+      "title": "Patch conflict scenario: ranking under constraints",
+      "type": "scenario",
+      "objective_ids": [
+       "4.2"
+      ],
+      "skill_ids": [
+       "S4.3"
+      ],
+      "assessment_ids": [
+       "VAR"
+      ]
+     }
+    ]
+   },
+   {
+    "course_id": "CRS5",
+    "name": "Course 5 (Week 5): Secure Architecture",
+    "learner_hours": 22.5,
+    "online_hours": 7.5,
+    "reading_hours": 5.0,
+    "practice_hours": 10.0,
+    "assessment_ids": [
+     "KC5",
+     "DISC5",
+     "LAB5A",
+     "LAB5B",
+     "PEB"
+    ],
+    "modules": [
+     {
+      "module_id": "5.1",
+      "title": "Lesson 5.1: Segmentation and firewall rule design",
+      "type": "lesson",
+      "objective_ids": [
+       "5.1"
+      ],
+      "skill_ids": [
+       "S5.1"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "5.2",
+      "title": "Lesson 5.2: Cloud service models and shared responsibility",
+      "type": "lesson",
+      "objective_ids": [
+       "5.2"
+      ],
+      "skill_ids": [
+       "S5.2"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "5.3",
+      "title": "Lesson 5.3: Resilience: EDR, backups and high availability",
+      "type": "lesson",
+      "objective_ids": [
+       "5.3"
+      ],
+      "skill_ids": [
+       "S5.5"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "5.4",
+      "title": "Firewall clinic (Lab 5a)",
+      "type": "clinic",
+      "objective_ids": [
+       "5.1"
+      ],
+      "skill_ids": [
+       "S5.1"
+      ],
+      "assessment_ids": [
+       "LAB5A"
+      ]
+     },
+     {
+      "module_id": "5.5",
+      "title": "Cloud exercise: spotting misconfigurations",
+      "type": "scenario",
+      "objective_ids": [
+       "5.2"
+      ],
+      "skill_ids": [
+       "S5.2",
+       "S5.4"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "5.6",
+      "title": "Linux hardening against a CIS Benchmark (Lab 5b)",
+      "type": "lab",
+      "objective_ids": [
+       "5.3"
+      ],
+      "skill_ids": [
+       "S5.3"
+      ],
+      "assessment_ids": [
+       "LAB5B"
+      ]
+     }
+    ]
+   },
+   {
+    "course_id": "CRS6",
+    "name": "Course 6 (Week 6): Security Operations and SIEM",
+    "learner_hours": 22.5,
+    "online_hours": 7.5,
+    "reading_hours": 5.0,
+    "practice_hours": 10.0,
+    "assessment_ids": [
+     "KC6",
+     "DISC6",
+     "LAB6",
+     "TKT1",
+     "TKT2",
+     "TKT3"
+    ],
+    "modules": [
+     {
+      "module_id": "6.1",
+      "title": "Lesson 6.1: Log sources and what each answers",
+      "type": "lesson",
+      "objective_ids": [
+       "6.1"
+      ],
+      "skill_ids": [
+       "S6.1"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "6.2",
+      "title": "Lesson 6.2: SIEM searches, tuning and AI-assisted triage",
+      "type": "lesson",
+      "objective_ids": [
+       "6.2"
+      ],
+      "skill_ids": [
+       "S2.4",
+       "S6.2",
+       "S6.5"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "6.3",
+      "title": "Lesson 6.3: Triage decisions, tickets and escalation",
+      "type": "lesson",
+      "objective_ids": [
+       "6.3"
+      ],
+      "skill_ids": [
+       "S6.3",
+       "S6.4"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "6.4",
+      "title": "SIEM clinic (Lab 6)",
+      "type": "clinic",
+      "objective_ids": [
+       "6.2",
+       "6.3"
+      ],
+      "skill_ids": [
+       "S6.2",
+       "S6.3",
+       "S6.5"
+      ],
+      "assessment_ids": [
+       "LAB6"
+      ]
+     },
+     {
+      "module_id": "6.5",
+      "title": "Hidden true positive scenario: three alerts, three tickets",
+      "type": "scenario",
+      "objective_ids": [
+       "6.3"
+      ],
+      "skill_ids": [],
+      "assessment_ids": [
+       "TKT1",
+       "TKT2",
+       "TKT3"
+      ]
+     }
+    ]
+   },
+   {
+    "course_id": "CRS7",
+    "name": "Course 7 (Week 7): Incident Response and Forensics",
+    "learner_hours": 22.5,
+    "online_hours": 7.5,
+    "reading_hours": 5.0,
+    "practice_hours": 10.0,
+    "assessment_ids": [
+     "KC7",
+     "DISC7",
+     "LAB7",
+     "IRR"
+    ],
+    "modules": [
+     {
+      "module_id": "7.1",
+      "title": "Lesson 7.1: The NIST SP 800-61r3 lifecycle and CSF 2.0 functions",
+      "type": "lesson",
+      "objective_ids": [
+       "7.1"
+      ],
+      "skill_ids": [
+       "S7.1"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "7.2",
+      "title": "Lesson 7.2: Containment, eradication and recovery choices",
+      "type": "lesson",
+      "objective_ids": [
+       "7.2"
+      ],
+      "skill_ids": [
+       "S7.2"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "7.3",
+      "title": "Lesson 7.3: Evidence handling and incident reporting",
+      "type": "lesson",
+      "objective_ids": [
+       "7.3",
+       "7.4"
+      ],
+      "skill_ids": [
+       "S7.3",
+       "S7.5"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "7.4",
+      "title": "Timeline clinic: Windows event logs and prefetch (Forensics lab)",
+      "type": "clinic",
+      "objective_ids": [
+       "7.3"
+      ],
+      "skill_ids": [
+       "S7.3",
+       "S7.4"
+      ],
+      "assessment_ids": [
+       "LAB7"
+      ]
+     },
+     {
+      "module_id": "7.5",
+      "title": "Ransomware tabletop scenario",
+      "type": "scenario",
+      "objective_ids": [
+       "7.1",
+       "7.2"
+      ],
+      "skill_ids": [
+       "S7.1",
+       "S7.2"
+      ],
+      "assessment_ids": [
+       "IRR"
+      ]
+     }
+    ]
+   },
+   {
+    "course_id": "CRS8",
+    "name": "Course 8 (Week 8): Governance, Risk, Capstone, and Career Launch",
+    "learner_hours": 22.5,
+    "online_hours": 7.5,
+    "reading_hours": 5.0,
+    "practice_hours": 10.0,
+    "assessment_ids": [
+     "KC8",
+     "DISC8",
+     "PEC",
+     "CAPT",
+     "CAPB",
+     "CAPR"
+    ],
+    "modules": [
+     {
+      "module_id": "8.1",
+      "title": "Lesson 8.1: Policies, standards and the NIST CSF 2.0 profile",
+      "type": "lesson",
+      "objective_ids": [
+       "8.1"
+      ],
+      "skill_ids": [
+       "S8.1",
+       "S8.3"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "8.2",
+      "title": "Lesson 8.2: Quantitative risk and writing for leaders",
+      "type": "lesson",
+      "objective_ids": [
+       "8.2",
+       "8.3"
+      ],
+      "skill_ids": [
+       "S8.2",
+       "S8.4"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "8.3",
+      "title": "Lesson 8.3: Governance of generative AI and acceptable use",
+      "type": "lesson",
+      "objective_ids": [
+       "8.4"
+      ],
+      "skill_ids": [
+       "S8.5"
+      ],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "8.4",
+      "title": "Executive brief clinic",
+      "type": "clinic",
+      "objective_ids": [
+       "8.3"
+      ],
+      "skill_ids": [
+       "S8.4"
+      ],
+      "assessment_ids": [
+       "CAPB"
+      ]
+     },
+     {
+      "module_id": "8.5",
+      "title": "Bank audit scenario",
+      "type": "scenario",
+      "objective_ids": [],
+      "skill_ids": [],
+      "assessment_ids": []
+     },
+     {
+      "module_id": "8.6",
+      "title": "Capstone: Tidewater incident, fixes, executive brief and recorded briefing",
+      "type": "scenario",
+      "objective_ids": [
+       "8.3"
+      ],
+      "skill_ids": [],
+      "assessment_ids": [
+       "CAPT",
+       "CAPB",
+       "CAPR"
+      ]
+     },
+     {
+      "module_id": "8.7",
+      "title": "Career launch: roles that hire before clearance",
+      "type": "lesson",
+      "objective_ids": [],
+      "skill_ids": [],
+      "assessment_ids": []
+     }
+    ]
+   }
+  ],
+  "assessments": [
+   {
+    "assessment_id": "KC1",
+    "name": "Knowledge Check 1",
+    "type": "knowledge check",
+    "course_id": "CRS1",
+    "auto_grade": "score",
+    "items_count": 10,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "1.1",
+     "1.2",
+     "1.3",
+     "1.4"
+    ],
+    "measured": [
+     "S1.1",
+     "S1.2",
+     "S1.3",
+     "S1.4",
+     "S1.5"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "KC2",
+    "name": "Knowledge Check 2",
+    "type": "knowledge check",
+    "course_id": "CRS2",
+    "auto_grade": "score",
+    "items_count": 10,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "2.1",
+     "2.2",
+     "2.3",
+     "2.4"
+    ],
+    "measured": [
+     "S2.1",
+     "S2.2",
+     "S2.3",
+     "S2.5"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "KC3",
+    "name": "Knowledge Check 3",
+    "type": "knowledge check",
+    "course_id": "CRS3",
+    "auto_grade": "score",
+    "items_count": 10,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "3.1",
+     "3.3"
+    ],
+    "measured": [
+     "S3.2",
+     "S3.3",
+     "S3.4"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "KC4",
+    "name": "Knowledge Check 4",
+    "type": "knowledge check",
+    "course_id": "CRS4",
+    "auto_grade": "score",
+    "items_count": 10,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "4.3"
+    ],
+    "measured": [
+     "S4.4",
+     "S4.5"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "KC5",
+    "name": "Knowledge Check 5",
+    "type": "knowledge check",
+    "course_id": "CRS5",
+    "auto_grade": "score",
+    "items_count": 10,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "5.2",
+     "5.3"
+    ],
+    "measured": [
+     "S5.2",
+     "S5.4",
+     "S5.5"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "KC6",
+    "name": "Knowledge Check 6",
+    "type": "knowledge check",
+    "course_id": "CRS6",
+    "auto_grade": "score",
+    "items_count": 10,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "6.1"
+    ],
+    "measured": [
+     "S6.1"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "KC7",
+    "name": "Knowledge Check 7",
+    "type": "knowledge check",
+    "course_id": "CRS7",
+    "auto_grade": "score",
+    "items_count": 10,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "7.1"
+    ],
+    "measured": [
+     "S7.1"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "KC8",
+    "name": "Knowledge Check 8",
+    "type": "knowledge check",
+    "course_id": "CRS8",
+    "auto_grade": "score",
+    "items_count": 10,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "8.1",
+     "8.2"
+    ],
+    "measured": [
+     "S8.1",
+     "S8.2"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "DISC1",
+    "name": "Discussion 1: Where CIA, AAA and non-repudiation show up in a workplace system you know",
+    "type": "discussion",
+    "course_id": "CRS1",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [
+     "1.1"
+    ],
+    "measured": [
+     "S1.2"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "DISC2",
+    "name": "Discussion 2: AI-enabled attacks you have seen or expect, and the controls that counter them",
+    "type": "discussion",
+    "course_id": "CRS2",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [
+     "2.4"
+    ],
+    "measured": [
+     "S2.5"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "DISC3",
+    "name": "Discussion 3: Choosing an MFA method for a use case against NIST SP 800-63B-4",
+    "type": "discussion",
+    "course_id": "CRS3",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [
+     "3.1"
+    ],
+    "measured": [
+     "S3.2"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "DISC4",
+    "name": "Discussion 4: KEV versus CVSS: when the score and the real-world risk disagree (participation graded)",
+    "type": "discussion",
+    "course_id": "CRS4",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [],
+    "measured": [],
+    "practiced": [
+     "S4.3"
+    ],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "DISC5",
+    "name": "Discussion 5: Who owns what: shared responsibility across IaaS, PaaS and SaaS",
+    "type": "discussion",
+    "course_id": "CRS5",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [
+     "5.2"
+    ],
+    "measured": [
+     "S5.2"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "DISC6",
+    "name": "Discussion 6: When the AI assistant was wrong: checking triage output by hand (participation graded)",
+    "type": "discussion",
+    "course_id": "CRS6",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [],
+    "measured": [],
+    "practiced": [
+     "S6.5"
+    ],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "DISC7",
+    "name": "Discussion 7: Contain now or watch longer: a containment trade-off debate (participation graded)",
+    "type": "discussion",
+    "course_id": "CRS7",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [],
+    "measured": [],
+    "practiced": [
+     "S7.2"
+    ],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "DISC8",
+    "name": "Discussion 8: Acceptable use of generative AI tools with company data",
+    "type": "discussion",
+    "course_id": "CRS8",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [
+     "8.4"
+    ],
+    "measured": [
+     "S8.5"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "LAB1",
+    "name": "Lab 1: Wireshark packet capture analysis",
+    "type": "lab",
+    "course_id": "CRS1",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 4,
+    "objective_ids": [
+     "1.2"
+    ],
+    "measured": [
+     "S1.3"
+    ],
+    "practiced": [
+     "S1.4"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "LAB2",
+    "name": "Lab 2: Phishing header analysis and ATT&CK mapping",
+    "type": "lab",
+    "course_id": "CRS2",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 4,
+    "objective_ids": [
+     "2.3",
+     "6.2"
+    ],
+    "measured": [
+     "S2.3",
+     "S2.4"
+    ],
+    "practiced": [
+     "S2.2"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "LAB3A",
+    "name": "Lab 3a: Group Policy and least-privilege access in Active Directory",
+    "type": "lab",
+    "course_id": "CRS3",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 4,
+    "objective_ids": [
+     "3.2"
+    ],
+    "measured": [
+     "S3.1"
+    ],
+    "practiced": [
+     "S3.3"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "LAB3B",
+    "name": "Lab 3b: Hashing, key pair, CSR and certificate chain",
+    "type": "lab",
+    "course_id": "CRS3",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 4,
+    "objective_ids": [
+     "3.3"
+    ],
+    "measured": [
+     "S3.4",
+     "S3.5"
+    ],
+    "practiced": [],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "LAB4",
+    "name": "Lab 4: Discovery and vulnerability scan with validation",
+    "type": "lab",
+    "course_id": "CRS4",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 4,
+    "objective_ids": [
+     "4.1"
+    ],
+    "measured": [
+     "S4.1",
+     "S4.2"
+    ],
+    "practiced": [
+     "S4.3"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "LAB5A",
+    "name": "Lab 5a: Firewall rules and segmentation test",
+    "type": "lab",
+    "course_id": "CRS5",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 4,
+    "objective_ids": [
+     "5.1"
+    ],
+    "measured": [
+     "S5.1"
+    ],
+    "practiced": [
+     "S1.4"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "LAB5B",
+    "name": "Lab 5b: Linux hardening against a CIS Benchmark",
+    "type": "lab",
+    "course_id": "CRS5",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 4,
+    "objective_ids": [
+     "5.3"
+    ],
+    "measured": [
+     "S5.3"
+    ],
+    "practiced": [],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "LAB6",
+    "name": "Lab 6: SIEM search, tuning and alert triage",
+    "type": "lab",
+    "course_id": "CRS6",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 4,
+    "objective_ids": [
+     "6.1",
+     "6.2",
+     "6.3"
+    ],
+    "measured": [
+     "S6.1",
+     "S6.2",
+     "S6.3",
+     "S6.5"
+    ],
+    "practiced": [
+     "S2.4",
+     "S6.4"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "LAB7",
+    "name": "Forensics lab: evidence preservation and incident timeline",
+    "type": "lab",
+    "course_id": "CRS7",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 4,
+    "objective_ids": [
+     "7.3"
+    ],
+    "measured": [
+     "S7.3",
+     "S7.4"
+    ],
+    "practiced": [
+     "S7.1"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "VAR",
+    "name": "Vulnerability Assessment Report",
+    "type": "report",
+    "course_id": "CRS4",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 5,
+    "objective_ids": [
+     "4.1",
+     "4.2",
+     "4.3"
+    ],
+    "measured": [
+     "S4.1",
+     "S4.2",
+     "S4.3",
+     "S4.4"
+    ],
+    "practiced": [
+     "S8.4"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "IRR",
+    "name": "Incident Response Report",
+    "type": "report",
+    "course_id": "CRS7",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 5,
+    "objective_ids": [
+     "7.1",
+     "7.2",
+     "7.4",
+     "8.1"
+    ],
+    "measured": [
+     "S7.1",
+     "S7.2",
+     "S7.5",
+     "S8.3"
+    ],
+    "practiced": [
+     "S7.4",
+     "S8.4"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "TKT1",
+    "name": "Incident Ticket 1 (hidden true positive scenario)",
+    "type": "ticket",
+    "course_id": "CRS6",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [
+     "6.3"
+    ],
+    "measured": [
+     "S6.4"
+    ],
+    "practiced": [
+     "S6.3",
+     "S6.1"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "TKT2",
+    "name": "Incident Ticket 2 (hidden true positive scenario)",
+    "type": "ticket",
+    "course_id": "CRS6",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [
+     "6.3"
+    ],
+    "measured": [
+     "S6.4"
+    ],
+    "practiced": [
+     "S6.3",
+     "S6.1"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "TKT3",
+    "name": "Incident Ticket 3 (hidden true positive scenario)",
+    "type": "ticket",
+    "course_id": "CRS6",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [
+     "6.3"
+    ],
+    "measured": [
+     "S6.4"
+    ],
+    "practiced": [
+     "S6.3",
+     "S6.1"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "PEA",
+    "name": "Practice Exam A (Domains 1-2 emphasis; C1-C3)",
+    "type": "practice exam",
+    "course_id": "CRS3",
+    "auto_grade": "score",
+    "items_count": 30,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "1.1",
+     "1.4"
+    ],
+    "measured": [
+     "S1.1",
+     "S1.5"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "PEB",
+    "name": "Practice Exam B (Domains 1-3; C1-C3, C5)",
+    "type": "practice exam",
+    "course_id": "CRS5",
+    "auto_grade": "score",
+    "items_count": 40,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "2.2",
+     "3.1"
+    ],
+    "measured": [
+     "S2.2",
+     "S3.2"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "PEC",
+    "name": "Practice Exam C (full-length, all five domains; Domain 2 weighted at 22 of 90 items)",
+    "type": "practice exam",
+    "course_id": "CRS8",
+    "auto_grade": "score",
+    "items_count": 90,
+    "rubric_rows": 0,
+    "objective_ids": [
+     "5.1",
+     "7.3",
+     "8.2"
+    ],
+    "measured": [
+     "S5.1",
+     "S7.3",
+     "S8.2"
+    ],
+    "practiced": [],
+    "performance_task": false
+   },
+   {
+    "assessment_id": "CAPT",
+    "name": "Capstone: technical fixes, triage log, analysis, incident handling and timeline (Tidewater SOC)",
+    "type": "capstone",
+    "course_id": "CRS8",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 6,
+    "objective_ids": [
+     "1.1",
+     "2.2",
+     "2.3",
+     "3.1",
+     "3.2",
+     "4.2",
+     "5.1",
+     "5.2",
+     "6.2",
+     "6.3",
+     "7.2",
+     "7.3"
+    ],
+    "measured": [
+     "S1.1",
+     "S1.2",
+     "S2.2",
+     "S2.4",
+     "S3.1",
+     "S3.2",
+     "S4.3",
+     "S5.1",
+     "S5.2",
+     "S6.2",
+     "S6.3",
+     "S6.4",
+     "S7.2",
+     "S7.4"
+    ],
+    "practiced": [
+     "S1.3",
+     "S4.4",
+     "S5.3",
+     "S6.1",
+     "S6.5",
+     "S7.1",
+     "S7.3"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "CAPB",
+    "name": "Capstone: executive brief",
+    "type": "capstone",
+    "course_id": "CRS8",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 4,
+    "objective_ids": [
+     "8.1",
+     "8.2",
+     "8.3"
+    ],
+    "measured": [
+     "S8.2",
+     "S8.3",
+     "S8.4"
+    ],
+    "practiced": [
+     "S7.5",
+     "S8.1"
+    ],
+    "performance_task": true
+   },
+   {
+    "assessment_id": "CAPR",
+    "name": "Capstone: recorded briefing to a non-technical leader",
+    "type": "capstone",
+    "course_id": "CRS8",
+    "auto_grade": "rubric",
+    "items_count": 1,
+    "rubric_rows": 3,
+    "objective_ids": [
+     "7.4",
+     "8.3"
+    ],
+    "measured": [
+     "S7.5",
+     "S8.4"
+    ],
+    "practiced": [
+     "S8.3"
+    ],
+    "performance_task": true
+   }
+  ],
+  "prerequisites": [
+   {
+    "from_id": "CRS1",
+    "to_id": "CRS2",
+    "relation_type": "course_sequence",
+    "rationale": "Week 1 content is assumed knowledge in Week 2; courses release in order"
+   },
+   {
+    "from_id": "CRS2",
+    "to_id": "CRS3",
+    "relation_type": "course_sequence",
+    "rationale": "Week 2 content is assumed knowledge in Week 3; courses release in order"
+   },
+   {
+    "from_id": "CRS3",
+    "to_id": "CRS4",
+    "relation_type": "course_sequence",
+    "rationale": "Week 3 content is assumed knowledge in Week 4; courses release in order"
+   },
+   {
+    "from_id": "CRS4",
+    "to_id": "CRS5",
+    "relation_type": "course_sequence",
+    "rationale": "Week 4 content is assumed knowledge in Week 5; courses release in order"
+   },
+   {
+    "from_id": "CRS5",
+    "to_id": "CRS6",
+    "relation_type": "course_sequence",
+    "rationale": "Week 5 content is assumed knowledge in Week 6; courses release in order"
+   },
+   {
+    "from_id": "CRS6",
+    "to_id": "CRS7",
+    "relation_type": "course_sequence",
+    "rationale": "Week 6 content is assumed knowledge in Week 7; courses release in order"
+   },
+   {
+    "from_id": "CRS7",
+    "to_id": "CRS8",
+    "relation_type": "course_sequence",
+    "rationale": "Week 7 content is assumed knowledge in Week 8; courses release in order"
+   },
+   {
+    "from_id": "1.2",
+    "to_id": "1.4",
+    "relation_type": "module_sequence",
+    "rationale": "Protocols and ports lesson before the Wireshark clinic"
+   },
+   {
+    "from_id": "1.2",
+    "to_id": "2.4",
+    "relation_type": "module_sequence",
+    "rationale": "Reading protocol fields precedes reading email headers in Lab 2"
+   },
+   {
+    "from_id": "2.2",
+    "to_id": "2.4",
+    "relation_type": "module_sequence",
+    "rationale": "Attack indicators before mapping evidence to ATT&CK"
+   },
+   {
+    "from_id": "3.1",
+    "to_id": "3.4",
+    "relation_type": "module_sequence",
+    "rationale": "Authentication and lifecycle concepts before configuring Group Policy"
+   },
+   {
+    "from_id": "3.2",
+    "to_id": "3.6",
+    "relation_type": "module_sequence",
+    "rationale": "Hashing lesson before the cryptography lab"
+   },
+   {
+    "from_id": "4.1",
+    "to_id": "4.4",
+    "relation_type": "module_sequence",
+    "rationale": "Validation method before the scan report clinic"
+   },
+   {
+    "from_id": "4.2",
+    "to_id": "4.5",
+    "relation_type": "module_sequence",
+    "rationale": "CVSS, KEV and asset value before the patch conflict scenario"
+   },
+   {
+    "from_id": "5.1",
+    "to_id": "5.4",
+    "relation_type": "module_sequence",
+    "rationale": "Rule design before the firewall clinic"
+   },
+   {
+    "from_id": "6.2",
+    "to_id": "6.4",
+    "relation_type": "module_sequence",
+    "rationale": "SIEM search syntax before the SIEM clinic"
+   },
+   {
+    "from_id": "6.3",
+    "to_id": "6.5",
+    "relation_type": "module_sequence",
+    "rationale": "Ticket standard before writing the three scenario tickets"
+   },
+   {
+    "from_id": "7.3",
+    "to_id": "7.4",
+    "relation_type": "module_sequence",
+    "rationale": "Evidence handling before the forensics timeline clinic"
+   },
+   {
+    "from_id": "2.6",
+    "to_id": "8.4",
+    "relation_type": "module_sequence",
+    "rationale": "Week 2 threat brief draft is revised in the executive brief clinic"
+   },
+   {
+    "from_id": "8.4",
+    "to_id": "8.6",
+    "relation_type": "module_sequence",
+    "rationale": "Executive brief clinic before the capstone brief"
+   },
+   {
+    "from_id": "S1.3",
+    "to_id": "S6.2",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Reading protocol fields in a capture is required before writing SIEM searches on network events"
+   },
+   {
+    "from_id": "S1.3",
+    "to_id": "S2.3",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Header and protocol literacy supports email header analysis"
+   },
+   {
+    "from_id": "S1.1",
+    "to_id": "S5.1",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Control classification precedes designing preventive network controls"
+   },
+   {
+    "from_id": "S1.4",
+    "to_id": "S5.1",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Subnet calculation is required to write segment-level firewall rules"
+   },
+   {
+    "from_id": "S1.2",
+    "to_id": "S8.2",
+    "relation_type": "skill_prerequisite",
+    "rationale": "CIA impact reasoning feeds SLE and ALE estimation"
+   },
+   {
+    "from_id": "S2.2",
+    "to_id": "S2.4",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Recognizing attack indicators precedes ATT&CK mapping"
+   },
+   {
+    "from_id": "S2.4",
+    "to_id": "S6.3",
+    "relation_type": "skill_prerequisite",
+    "rationale": "ATT&CK mapping is the enrichment step in alert triage"
+   },
+   {
+    "from_id": "S3.4",
+    "to_id": "S7.3",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Hash verification underpins evidence integrity in chain of custody"
+   },
+   {
+    "from_id": "S3.3",
+    "to_id": "S3.1",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Account lifecycle concepts before configuring role-based groups"
+   },
+   {
+    "from_id": "S4.1",
+    "to_id": "S4.2",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Scan output must exist before findings can be validated"
+   },
+   {
+    "from_id": "S4.2",
+    "to_id": "S4.3",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Only validated findings are prioritized"
+   },
+   {
+    "from_id": "S4.3",
+    "to_id": "S4.4",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Prioritization precedes remediation recommendations"
+   },
+   {
+    "from_id": "S4.3",
+    "to_id": "S8.2",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Vulnerability prioritization reasoning carries into risk register entries"
+   },
+   {
+    "from_id": "S5.3",
+    "to_id": "S6.1",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Knowing the hardened baseline helps pick the log source that shows deviation"
+   },
+   {
+    "from_id": "S6.1",
+    "to_id": "S6.2",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Choosing the log source precedes writing the search"
+   },
+   {
+    "from_id": "S6.2",
+    "to_id": "S6.3",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Search results are the evidence for the triage decision"
+   },
+   {
+    "from_id": "S6.3",
+    "to_id": "S6.4",
+    "relation_type": "skill_prerequisite",
+    "rationale": "The triage decision is what the ticket documents"
+   },
+   {
+    "from_id": "S6.3",
+    "to_id": "S7.1",
+    "relation_type": "skill_prerequisite",
+    "rationale": "A triaged true positive opens the incident response lifecycle"
+   },
+   {
+    "from_id": "S7.1",
+    "to_id": "S7.2",
+    "relation_type": "skill_prerequisite",
+    "rationale": "The lifecycle frames containment, eradication and recovery choices"
+   },
+   {
+    "from_id": "S7.4",
+    "to_id": "S7.5",
+    "relation_type": "skill_prerequisite",
+    "rationale": "The timeline supplies the root cause for the incident report"
+   },
+   {
+    "from_id": "S7.5",
+    "to_id": "S8.4",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Incident reporting for a leader is the base for executive recommendations"
+   },
+   {
+    "from_id": "S8.2",
+    "to_id": "S8.4",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Quantified risk gives the recommendation its cost and risk range"
+   },
+   {
+    "from_id": "S8.1",
+    "to_id": "S8.3",
+    "relation_type": "skill_prerequisite",
+    "rationale": "Policy hierarchy is needed to use a CSF 2.0 profile"
+   },
+   {
+    "from_id": "ENTRY",
+    "to_id": "PROGRAM",
+    "relation_type": "program_entry",
+    "rationale": "Basic computer literacy: file management, web browsing, installing software on Windows or macOS"
+   },
+   {
+    "from_id": "ENTRY",
+    "to_id": "PROGRAM",
+    "relation_type": "program_entry",
+    "rationale": "English reading level sufficient for technical documentation (CEFR B2 or equivalent; UMGC confirms its own standard)"
+   },
+   {
+    "from_id": "ENTRY",
+    "to_id": "PROGRAM",
+    "relation_type": "program_entry",
+    "rationale": "No security clearance required; the career module targets roles that hire before clearance"
+   },
+   {
+    "from_id": "ENTRY",
+    "to_id": "PROGRAM",
+    "relation_type": "program_entry",
+    "rationale": "No prior cybersecurity or networking coursework required"
+   }
+  ],
+  "credentials": [
+   {
+    "credential_id": "CRED1",
+    "name": "UMGC Certificate of Completion: Cybersecurity Operations Foundations",
+    "type": "UMGC certificate",
+    "next_stack": "CRED2, CRED3"
+   },
+   {
+    "credential_id": "CRED2",
+    "name": "UMGC digital badge (Open Badges 3.0)",
+    "type": "digital badge",
+    "next_stack": "CRED4"
+   },
+   {
+    "credential_id": "CRED3",
+    "name": "CompTIA Security+ SY0-801",
+    "type": "industry certification",
+    "next_stack": "CRED4"
+   },
+   {
+    "credential_id": "CRED4",
+    "name": "UMGC CMIT 320 Network Security (3 credits) plus 1 elective lab credit",
+    "type": "academic credit",
+    "next_stack": "Next stack: CompTIA CySA+ mapped to UMGC CMIT 421"
+   }
+  ]
+ }
+}

@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block body %}
+<h2>{{ a.asset_id }}: {{ a.title }}</h2>
+<p class="kicker">{{ a.course_id }} | Sprint {{ a.sprint }} | {{ a.type }} | state <span class="pill">{{ a.state }}</span> | revision {{ rev }} of {{ a.revision }}
+ {% for r in range(1, a.revision + 1) %}<a href="?rev={{ r }}" class="pill {{ 'p' if r == rev }}">r{{ r }}</a> {% endfor %}</p>
+<div class="grid g2">
+<div>
+<h3>Content</h3>
+{% if not content %}<p class="muted">Not drafted yet.</p>
+{% elif content.screens %}
+  {% for sc in content.screens %}<div class="screen"><b>{{ sc.heading }}</b>{% for b in sc.blocks %}<p>{{ b.text }}{% for c in b.citations %}<span class="cite">{{ c }}</span>{% endfor %}</p>{% endfor %}
+  {% if sc.media %}<p class="muted">[{{ sc.media.type }}] alt: {{ sc.media.alt or 'MISSING' }}</p>{% endif %}</div>{% endfor %}
+  {% if content.practice %}<h3>Practice</h3>{% for pr in content.practice %}<p>{{ pr.prompt }} <span class="muted">({{ pr.skill_id }})</span></p>{% endfor %}{% endif %}
+  <p class="muted">{{ content.summary }}</p>
+{% elif content.get('items') %}
+  <p class="muted">{{ content.objectives_text }} {{ content.note }}</p>
+  {% for it in content.get('items') %}<div class="screen"><b>{{ it.item_id }}</b> <span class="muted">{{ it.skill_id }} | objective {{ it.objective_id }}</span><p>{{ it.stem }}</p>
+  {% for o in it.options %}<div>{{ '*' if o.correct else '' }}{{ o.id }}. {{ o.text }}<div class="muted" style="margin-left:14px">{{ o.rationale }}</div></div>{% endfor %}</div>{% endfor %}
+{% else %}
+  <p>{{ content.prompt }}</p><p class="muted">{{ content.objectives_text }}</p><ol>{% for s in content.steps %}<li>{{ s }}</li>{% endfor %}</ol>
+  <table><tr><th>Rubric row</th><th>Levels</th></tr>{% for r in content.rubric %}<tr><td>{{ r.criterion }}</td><td>{{ r.levels|join(' | ') }}</td></tr>{% endfor %}</table>
+  <p class="muted">{{ content.auto_grade }}</p>
+{% endif %}
+</div>
+<div>
+<h3>Automated checks (revision {{ rev }})</h3>
+{% if checks %}
+<table><tr><th>Severity</th><th>Check</th><th>Gate</th><th>Finding</th></tr>{% for f in checks.findings %}<tr><td class="sev-{{ f.severity }}">{{ f.severity }}</td><td>{{ f.check }}</td><td>{{ f.gate }}</td><td>{{ f.message }}</td></tr>{% else %}<tr><td colspan="4" class="muted">No findings.</td></tr>{% endfor %}</table>
+<p>Reading level: grade {{ checks.reading_level.grade }} ({{ checks.reading_level.words }} words). Objective coverage: {% for o in checks.objective_coverage %}<span class="pill">{{ o.objective_id }} {{ (o.coverage*100)|int }}%</span> {% endfor %}</p>
+<h3>Lightcast trace of the built text ({{ checks.skills_trace.lightcast_mode }})</h3>
+<div class="kv"><div>Declared and evidenced</div><div>{% for s in checks.skills_trace.declared_evidenced %}<span class="pill ok">{{ s }} {{ skills[s].name }} ({{ checks.skills_trace.mentions[s] }})</span> {% endfor %}</div>
+<div>Declared, no evidence</div><div>{% for s in checks.skills_trace.declared_not_evidenced %}<span class="pill bad">{{ s }} {{ skills[s].name }}</span> {% endfor %}</div>
+<div>Evidenced, not declared</div><div>{% for s in checks.skills_trace.evidenced_not_declared %}<span class="pill">{{ s }} {{ skills[s].name }}</span> {% endfor %}</div></div>
+{% else %}<p class="muted">Checks run after drafting.</p>{% endif %}
+<h3>Provenance record</h3>
+{% if prov %}<div class="kv"><div>Contribution</div><div>{{ prov.ai_contribution }}</div><div>Model</div><div>{{ prov.model }}</div><div>Prompt</div><div>{{ prov.prompt_id }} v{{ prov.prompt_version }}</div>
+<div>Source pack</div><div>{{ prov.source_pack_version }}</div><div>Taxonomy</div><div>{{ prov.taxonomy_version }}</div><div>Drafted</div><div>{{ prov.drafted_at }} by {{ prov.drafted_by }}</div>
+{% if prov.feedback_applied %}<div>Feedback applied</div><div>{{ prov.feedback_applied|join('; ') }}</div>{% endif %}</div>
+<table style="margin-top:8px"><tr><th>Gate</th><th>Decision</th><th>By</th><th>Role</th><th>Note</th><th>At</th></tr>{% for k, g in prov.gates|dictsort %}<tr><td>{{ g.gate }}</td><td>{{ g.decision }}</td><td>{{ g.by }}</td><td>{{ g.role }}</td><td>{{ g.note }}</td><td class="muted">{{ g.at }}</td></tr>{% endfor %}</table>{% endif %}
+<h3>Gate history</h3>
+<table>{% for g in gates %}<tr><td>{{ g.label }}</td><td><span class="pill {{ 'ok' if g.status=='approved' else ('warn' if g.status=='pending' else 'bad') }}">{{ g.status }}</span></td><td>{{ g.decided_by }}</td><td>{{ g.note }}</td>
+<td>{% if g.status == 'pending' %}<form method="post" action="/p/{{p.id}}/gate" class="inline"><input type="hidden" name="gate_key" value="{{ g.gate_key }}"><input type="hidden" name="back" value="/p/{{p.id}}/asset/{{ a.asset_id }}"><input name="by" value="{{ me.name }}" placeholder="Reviewer" required style="width:100px"><input name="note" placeholder="Note"><button name="decision" value="approve">Approve</button><button class="sec" name="decision" value="return">Return</button></form>{% endif %}</td></tr>{% endfor %}</table>
+</div></div>
+{% endblock %}

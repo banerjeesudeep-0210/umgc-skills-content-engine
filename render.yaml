@@ -1,0 +1,125 @@
+# UMGC Skills Content Engine | Render Blueprint
+# One web service, five background worker pools, two cron jobs, one Postgres database.
+# After the first deploy: open the "skills-engine-keys" environment group in Render and paste your keys
+# (ANTHROPIC_API_KEY, LIGHTCAST_CLIENT_ID, LIGHTCAST_CLIENT_SECRET). Until then everything runs in mock mode.
+
+envVarGroups:
+  - name: skills-engine-keys
+    envVars:
+      - key: ANTHROPIC_API_KEY
+        value: set-me
+      - key: ANTHROPIC_MODEL
+        value: claude-sonnet-5-5
+      - key: LIGHTCAST_CLIENT_ID
+        value: set-me
+      - key: LIGHTCAST_CLIENT_SECRET
+        value: set-me
+      - key: LIGHTCAST_SCOPE
+        value: emsi_open
+      - key: LIGHTCAST_LICENSED_PRODUCTS
+        value: "false"
+      - key: LIGHTCAST_LICENSED_SCOPE
+        value: set-me
+      - key: PYTHON_VERSION
+        value: 3.12.7
+
+databases:
+  - name: skills-engine-db
+    plan: 0.1c-256mb
+    databaseName: skills_engine
+    user: skills_engine
+
+services:
+  - type: web
+    name: skills-engine-web
+    runtime: python
+    plan: 0.5c-512mb
+    buildCommand: pip install -r requirements.txt
+    startCommand: uvicorn engine.web.app:app --host 0.0.0.0 --port $PORT
+    healthCheckPath: /healthz
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: skills-engine-db, property: connectionString}
+      - key: APP_PASSWORD
+        generateValue: true
+      - fromGroup: skills-engine-keys
+
+  - type: worker
+    name: skills-engine-worker-skills
+    runtime: python
+    plan: 0.5c-512mb
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m engine.worker --pool skills --threads 2
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: skills-engine-db, property: connectionString}
+      - fromGroup: skills-engine-keys
+
+  - type: worker
+    name: skills-engine-worker-design
+    runtime: python
+    plan: 0.5c-512mb
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m engine.worker --pool design
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: skills-engine-db, property: connectionString}
+      - fromGroup: skills-engine-keys
+
+  - type: worker
+    name: skills-engine-worker-build
+    runtime: python
+    plan: 0.5c-512mb
+    numInstances: 2
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m engine.worker --pool build --threads 3
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: skills-engine-db, property: connectionString}
+      - fromGroup: skills-engine-keys
+
+  - type: worker
+    name: skills-engine-worker-qa
+    runtime: python
+    plan: 0.5c-512mb
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m engine.worker --pool qa --threads 2
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: skills-engine-db, property: connectionString}
+      - fromGroup: skills-engine-keys
+
+  - type: worker
+    name: skills-engine-worker-learn
+    runtime: python
+    plan: 0.5c-512mb
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m engine.worker --pool learn
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: skills-engine-db, property: connectionString}
+      - fromGroup: skills-engine-keys
+
+  - type: cron
+    name: skills-engine-lightcast-refresh
+    runtime: python
+    plan: 0.5c-512mb
+    schedule: "17 11 1 1,4,7,10 *"   # quarterly, first day of the quarter, 11:17 UTC
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m engine.cron refresh
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: skills-engine-db, property: connectionString}
+      - fromGroup: skills-engine-keys
+
+  - type: cron
+    name: skills-engine-housekeeping
+    runtime: python
+    plan: 0.5c-512mb
+    schedule: "*/10 * * * *"
+    buildCommand: pip install -r requirements.txt
+    startCommand: python -m engine.cron housekeep
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase: {name: skills-engine-db, property: connectionString}
+      - fromGroup: skills-engine-keys

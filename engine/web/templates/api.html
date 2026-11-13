@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% block body %}
+<p class="kicker">Every Lightcast and Claude call this Program made. Mock calls are logged with the same paths so the call plan is visible before keys are issued.</p>
+<div class="grid g2"><div><h2>Call plan, by endpoint</h2><table><tr><th>Service</th><th>Mode</th><th>Endpoint</th><th>Calls</th></tr>
+{% for (svc, mode, path), n in by %}<tr><td>{{ svc }}</td><td><span class="pill {{ mode }}">{{ mode }}</span></td><td>{{ path }}</td><td>{{ n }}</td></tr>{% endfor %}</table></div>
+<div><h2>Latest calls</h2><div style="max-height:600px;overflow:auto"><table><tr><th>At</th><th>Service</th><th>Method</th><th>Path</th><th>Purpose</th><th>Status</th></tr>
+{% for c in calls %}<tr><td class="muted">{{ c.at.strftime('%H:%M:%S') }}</td><td>{{ c.service }}</td><td>{{ c.method }}</td><td>{{ c.path }}</td><td class="muted">{{ c.purpose }}</td><td>{{ c.status }}</td></tr>{% endfor %}</table></div></div></div>
+{% endblock %}

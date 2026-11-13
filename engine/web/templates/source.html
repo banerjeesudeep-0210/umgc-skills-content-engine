@@ -1,0 +1,20 @@
+{% extends "base.html" %}
+{% block head %}{% if src.status == 'ingesting' %}<meta http-equiv="refresh" content="4">{% endif %}{% endblock %}
+{% block body %}
+<p><a href="/p/{{p.id}}/studio?zone=ingest">Source library</a></p>
+<h2>{{ src.source_id }}: {{ src.title }}</h2>
+<p class="kicker">{{ src.source_type }} | owner {{ src.owner }} | {{ src.format }} | {{ src.chars }} characters{% if src.truncated %} (truncated){% endif %} | uploaded by {{ src.uploaded_by }} {{ src.uploaded_at }} | <span class="pill {{ 'ok' if src.status=='approved' else ('bad' if src.status=='excluded' else 'warn') }}">{{ src.status }}</span></p>
+{% if src.license %}<p class="muted">License: {{ src.license }}</p>{% endif %}
+{% if src.status not in ('ingesting',) %}
+<div class="card c2"><b>SME decision: may the AI ground drafts and tutor answers on this source?</b>
+{% if src.decision %}<p>{{ src.status }} by {{ src.decision.by }} ({{ src.decision.role }}) {{ src.decision.at }} {{ src.decision.note }}</p>{% endif %}
+<form method="post" action="/p/{{p.id}}/sources/{{ src.source_id }}/decide" class="inline"><input name="note" placeholder="Note (accuracy, currency, permissions)" style="min-width:300px">
+<button name="decision" value="approve">Approve for grounding</button><button class="sec" name="decision" value="exclude">Exclude</button></form>
+<p class="muted">Approval is a Magic SME or Learning Experience Architect decision. You are signed in as {{ me.name or 'nobody' }} ({{ me.role }}).</p></div>
+<h3>Lightcast skills found ({{ src.lightcast_mode }})</h3>
+<p>{% for k in src.skills %}<span class="pill {{ 'p' if k.catalog_skill else '' }}">{{ k.name }}{% if k.catalog_skill %} = {{ k.catalog_skill }}{% endif %} ({{ k.mentions }})</span> {% else %}<span class="muted">none</span>{% endfor %}</p>
+<h3>Sections</h3>
+<table><tr><th>Section</th><th>Heading</th><th>Offset</th><th>Skills</th><th>Text</th></tr>
+{% for c in src.chunks[:150] %}<tr><td>{{ c.chunk_id }}</td><td>{{ c.heading }}</td><td>{{ c.start }}</td><td>{{ (c.skills or [])|join(', ') }}</td><td class="muted">{{ c.text[:300] }}{% if c.text|length > 300 %}...{% endif %}</td></tr>{% endfor %}</table>
+{% else %}<p>The ingest worker is reading this source.</p>{% endif %}
+{% endblock %}

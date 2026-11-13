@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+{% block body %}
+{% if not qa %}<p>The QA report is built once Sprint 2 is approved.</p>{% else %}
+<div class="band">
+  <div><div class="v">{{ qa.summary.courses_releasable }}/{{ qa.summary.courses }}</div><div class="l">Courses at 85+ with no open critical defect</div></div>
+  <div><div class="v">{{ qa.summary.links_evidenced }}/{{ qa.summary.links }}</div><div class="l">assessment-skill links evidenced in items</div></div>
+  <div><div class="v">{{ qa.summary.remediated }}/{{ qa.summary.defects_total }}</div><div class="l">findings remediated by revision</div></div>
+  <div><div class="v">{{ qa.coverage.rules|selectattr('passed')|list|length }}/5</div><div class="l">coverage rules on built content</div></div>
+</div>
+<h2>Course release standard (100 points, release at 85)</h2>
+<div style="overflow:auto"><table><tr><th>Course</th>{% for d in qa.release_scores[0].dimensions %}<th>{{ d.dimension }} ({{ d.weight }})</th>{% endfor %}<th>Score</th><th>Release</th></tr>
+{% for x in qa.release_scores %}<tr><td>{{ x.course }}</td>{% for d in x.dimensions %}<td>{{ d.points }} <span class="muted">({{ d.rating }}/4)</span></td>{% endfor %}<td><b>{{ x.score }}</b></td><td><span class="pill {{ 'ok' if x.release else 'bad' }}">{{ 'release' if x.release else 'hold' }}</span></td></tr>{% endfor %}</table></div>
+<div class="grid g2">
+<div><h2>Course-by-skill: declared vs evidenced (Lightcast trace)</h2>
+<table><tr><th>Course</th><th>Declared</th><th>Evidenced</th><th>Declared, no evidence</th><th>Evidenced, not declared</th></tr>
+{% for c in qa.course_skill_map %}<tr><td>{{ c.course_id }}</td><td>{{ c.declared }}</td><td>{{ c.declared_and_evidenced }}</td><td>{{ c.declared_no_evidence|join(', ') }}</td><td class="muted">{{ c.evidenced_not_declared|join(', ') }}</td></tr>{% endfor %}</table>
+<h2>Test plan</h2><ol>{% for t in qa.test_plan %}<li>{{ t }}</li>{% endfor %}</ol></div>
+<div><h2>Defect resolution log</h2><div style="max-height:520px;overflow:auto"><table><tr><th>Asset</th><th>Rev</th><th>Severity</th><th>Check</th><th>Finding</th><th>Status</th></tr>
+{% for d in qa.defects|sort(attribute='severity') %}<tr><td>{{ d.asset }}</td><td>{{ d.revision }}</td><td class="sev-{{ d.severity }}">{{ d.severity }}</td><td>{{ d.check }}</td><td>{{ d.message }}</td><td class="muted">{{ d.status }}</td></tr>{% endfor %}</table></div></div>
+</div>
+{% endif %}
+{% endblock %}
