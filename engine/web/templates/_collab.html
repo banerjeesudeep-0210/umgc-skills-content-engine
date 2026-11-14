@@ -1,0 +1,69 @@
+{% macro grid(g, label, add_label='Add row', id='grid') %}
+<div class="collabbar" aria-live="polite">
+  <span class="presence" id="{{ id }}-presence"></span>
+  <span id="{{ id }}-status" class="muted">Connecting...</span>
+  <span class="savestate" id="{{ id }}-saved">{% if g.editable %}Edits save automatically and everyone here sees them live.{% else %}Read only for your role or because it is approved.{% endif %}</span>
+</div>
+<div id="{{ id }}" role="region" aria-label="{{ label }}"></div>
+<div id="{{ id }}-msg" class="muted" aria-live="polite" style="margin-top:6px"></div>
+<script src="/static/collab.js"></script>
+<script>
+(function(){
+  const G = {{ g|tojson }};
+  const saved = document.getElementById('{{ id }}-saved'), msg = document.getElementById('{{ id }}-msg');
+  let grid;
+  async function save(rows){
+    if (!G.editable) return;
+    saved.textContent = 'Saving...';
+    try {
+      const r = await fetch(G.save, {method:'POST', headers:{'Content-Type':'application/json'}, body: JSON.stringify({rows})});
+      const d = await r.json();
+      if (!r.ok) { saved.textContent = 'Not saved'; msg.textContent = d.error || 'Save failed'; return; }
+      saved.textContent = 'Saved ' + d.saved_at;
+      if (d.patches) grid.patch(d.patches);
+      const f = d.coverage_failures || [];
+      msg.textContent = (d.coverage_passed !== undefined ? `Coverage rules passing: ${d.coverage_passed} of 5.` : '') +
+        (f.length ? ' Failing: ' + f.map(x => x.rule + ' (' + x.failures.join(', ') + ')').join('; ') : '');
+    } catch (e) { saved.textContent = 'Offline: will retry on the next edit'; }
+  }
+  grid = SCE.mountGrid(document.getElementById('{{ id }}'), {
+    room: G.room, user: G.user, columns: G.columns, seedRows: G.rows, canSeed: G.canSeed, editable: G.editable,
+    onChange: save, presenceEl: document.getElementById('{{ id }}-presence'), statusEl: document.getElementById('{{ id }}-status'),
+    addLabel: '{{ add_label }}'
+  });
+})();
+</script>
+{% endmacro %}
+
+{% macro lockbar(lock, what, p, can_reopen) %}
+{% if lock.locked %}
+<div class="lockbar" role="status">
+  <b>Approved at {{ {'skills': 'Gate 1', 'blueprint': 'Gate 2', 'outline': 'outline approval'}[what] }}: read only.</b>
+  {% if can_reopen %}
+  <form method="post" action="/p/{{ p.id }}/skills/reopen"><input type="hidden" name="what" value="{{ what }}">
+    <label class="sr-only" for="reopen-note">Reason for reopening</label>
+    <input id="reopen-note" name="note" placeholder="Why it must change (recorded; {{ 'it is approved' if what == 'outline' else 'UMGC decides' }} again)" required>
+    <button class="sec">Reopen for edits</button></form>
+  {% else %}<span class="muted" style="color:#fff">{{ 'An Instructional Designer or Learning Experience Architect' if what == 'outline' else 'A Learning Experience Architect or UMGC approver' }} can reopen it.</span>{% endif %}
+</div>
+{% endif %}
+{% endmacro %}
+
+{% macro gatebox(g, p, backurl, user_can) %}
+{% if g %}
+<div class="card {{ 'lav' if g.status == 'pending' else 'tint' }}">
+  <div class="row"><b>{{ g.label }}</b> <span class="pill {{ 'ok' if g.status=='approved' else ('warn' if g.status=='pending' else 'bad') }}">{{ g.status }}</span><span class="muted right">Decided by: {{ g.owner_role }}</span></div>
+  {% if g.status == 'pending' %}
+    {% if user_can %}
+    <form method="post" action="/p/{{ p.id }}/gate" class="mt">
+      <input type="hidden" name="gate_key" value="{{ g.gate_key }}"><input type="hidden" name="back" value="{{ backurl }}">
+      <div class="field"><label for="gnote-{{ g.id }}">Decision note</label><textarea id="gnote-{{ g.id }}" name="note" rows="2" placeholder="What you checked; for a return, what must change"></textarea></div>
+      <button name="decision" value="approve">Approve</button> <button class="sec" name="decision" value="return">Return for changes</button>
+    </form>
+    {% else %}<p class="muted">Waiting for {{ g.owner_role }}. Your role can view and comment.</p>{% endif %}
+  {% else %}
+    <p class="muted">{{ g.decided_by }} | {{ g.decided_at.strftime('%Y-%m-%d %H:%M') if g.decided_at }} {% if g.note %}| {{ g.note }}{% endif %}</p>
+  {% endif %}
+</div>
+{% else %}<p class="muted">This gate opens when the work before it is ready.</p>{% endif %}
+{% endmacro %}

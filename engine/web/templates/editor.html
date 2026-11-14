@@ -1,80 +1,151 @@
 {% extends "base.html" %}
+{% block h1 %}{{ a.asset_id }}: {{ a.title }}{% endblock %}
 {% block body %}
-<p><a href="/p/{{p.id}}/studio?zone=write">All assets</a> | <a href="/p/{{p.id}}/asset/{{ a.asset_id }}">Checks, provenance and gates</a></p>
-<h2>Write: {{ a.asset_id }} {{ a.title }}</h2>
-<p class="kicker">Revision {{ a.revision }} ({{ a.state }}){% if a.draft %} | working draft by {{ a.draft.edited_by }} {{ a.draft.edited_at }}, based on r{{ a.draft.base_revision }}{% endif %}
- | skills: {% for sid in a.skill_ids %}<span class="pill">{{ sid }} {{ skills[sid].name if sid in skills else '' }}</span> {% endfor %}</p>
-{% if a.state == 'author' and a.draft and a.draft.returned_note %}<div class="error">Returned to the author: {{ a.draft.returned_note }}. Revise and submit again.</div>{% endif %}
-{% if a.draft and a.draft.base_revision != a.revision %}<div class="error">This draft started from r{{ a.draft.base_revision }} but the asset is now at r{{ a.revision }}. Compare with the latest revision before you submit.</div>{% endif %}
-<div class="grid" style="grid-template-columns:2fr 1fr">
-<div>
-<form method="post" id="ed">
-<input type="hidden" name="base_revision" value="{{ a.draft.base_revision if a.draft else a.revision }}">
-<p><label>Title<br><input name="title" value="{{ c.title or a.title }}" style="width:100%"></label></p>
-{% if a.asset_type == 'module' %}
-  {% for sc in (c.screens or []) + [{'heading':'','blocks':[{'text':'','citations':[]}],'media':None}] %}{% set i = loop.index0 %}
-  <div class="screen" style="border-left-color:{{ '#7D5BD9' if not sc.heading else '#D2C1FF' }}">
-    <div style="display:flex;gap:6px;align-items:center"><b style="width:70px">{{ 'Screen ' ~ (i+1) if sc.heading else 'New screen' }}</b>
-      <input name="s{{i}}_heading" value="{{ sc.heading }}" placeholder="Heading" style="flex:1">
-      {% if sc.heading %}<label class="muted"><input type="checkbox" name="s{{i}}_delete"> remove</label>{% endif %}</div>
-    <textarea name="s{{i}}_text" id="t{{i}}" rows="4" style="margin-top:4px">{{ sc.blocks[0].text if sc.blocks else '' }}</textarea>
-    <div style="display:flex;gap:6px;flex-wrap:wrap;margin-top:4px">
-      <input name="s{{i}}_cites" id="c{{i}}" value="{{ (sc.blocks[0].citations if sc.blocks else [])|join(', ') }}" placeholder="Sources, e.g. {{ pack_ids[:2]|join(', ') }}" style="width:200px">
-      <input name="s{{i}}_alt" value="{{ sc.media.alt if sc.media else '' }}" placeholder="Alt text for the screen's image or diagram" style="flex:1">
-      {% if sc.media %}<input type="hidden" name="s{{i}}_hasmedia" value="1">{% endif %}
-      <input id="ai{{i}}" placeholder="Ask AI: e.g. add a worked example" style="width:220px"><button type="button" class="sec" onclick="assist({{i}})">AI assist</button></div>
-    <div class="muted" id="n{{i}}"></div>
-  </div>{% endfor %}
-  <p><label>Practice prompts (one per line)<textarea name="practice" rows="3">{% for pr in c.practice or [] %}{{ pr.prompt }}
-{% endfor %}</textarea></label></p>
-  <p><label>Summary<input name="summary" value="{{ c.summary }}" style="width:100%"></label></p>
-{% elif c.get('items') is not none or a.type in ('knowledge check','practice exam') %}
-  {% for it in (c.get('items') or []) + [{'item_id':'','stem':'','options':[],'key':'A','skill_id':'','objective_id':''}] %}{% set i = loop.index0 %}
-  <div class="screen"><div style="display:flex;gap:6px"><b style="width:90px">{{ it.item_id or 'New item' }}</b><input type="hidden" name="i{{i}}_id" value="{{ it.item_id }}">
-    <input name="i{{i}}_skill" value="{{ it.skill_id }}" placeholder="Skill ID" style="width:80px"><input name="i{{i}}_obj" value="{{ it.objective_id }}" placeholder="Objective" style="width:80px">
-    Key <select name="i{{i}}_key">{% for L in 'ABCD' %}<option {{ 'selected' if it.key == L }}>{{ L }}</option>{% endfor %}</select>
-    {% if it.item_id %}<label class="muted"><input type="checkbox" name="i{{i}}_delete"> remove</label>{% endif %}</div>
-    <textarea name="i{{i}}_stem" rows="2" placeholder="Stem" style="margin-top:4px">{{ it.stem }}</textarea>
-    {% for L in 'ABCD' %}{% set o = (it.options|selectattr('id','equalto',L)|list or [{'text':'','rationale':''}])[0] %}
-    <div style="display:flex;gap:6px;margin-top:3px"><b>{{ L }}</b><input name="i{{i}}_{{L}}" value="{{ o.text }}" style="flex:2"><input name="i{{i}}_{{L}}_why" value="{{ o.rationale }}" placeholder="Why it is right or what misconception it reveals" style="flex:1"></div>{% endfor %}</div>{% endfor %}
-{% else %}
-  <p><label>Task prompt<textarea name="prompt" rows="4">{{ c.prompt }}</textarea></label></p>
-  <p><label>Steps (one per line)<textarea name="steps" rows="4">{{ (c.steps or [])|join('\n') }}</textarea></label></p>
-  <p><label>Rubric rows (criterion | level 1 | level 2 | level 3 | level 4)<textarea name="rubric" rows="5">{% for r in c.rubric or [] %}{{ r.criterion }} | {{ r.levels|join(' | ') }}
-{% endfor %}</textarea></label></p>
-{% endif %}
-<div class="card c1" style="position:sticky;bottom:44px;display:flex;gap:8px;align-items:center;flex-wrap:wrap">
-  <button name="action" value="save">Save draft</button>
-  {% if live %}<select name="change_class"><option>routine</option><option>material</option></select><input name="change_note" placeholder="What changed and why" style="min-width:220px">{% endif %}
-  <button name="action" value="submit" class="sec">Submit for validation{% if live %} (raises a change ticket){% endif %}</button>
-  <span class="muted">Signed in as {{ me.name or 'nobody' }} ({{ me.role }}). Every save is recorded.</span></div>
-</form>
-{% if a.draft %}<form method="post" action="/p/{{p.id}}/studio/edit/{{ a.asset_id }}/discard"><button class="sec warn" style="margin-top:6px">Discard draft</button></form>{% endif %}
+<div class="row" style="margin-bottom:10px">
+  <span class="pill {{ 'ok' if a.state=='validated' else 'warn' }}">{{ {'author':'with author','queued':'AI drafting','drafted':'checks running'}.get(a.state, a.state) }}</span>
+  <span class="muted">{{ a.type }} | {{ a.course_id }} | Sprint {{ a.sprint }} | current revision r{{ a.revision }}{% if draft %} | working draft from r{{ draft.base_revision }}, last saved by {{ draft.edited_by }} {{ draft.edited_at }}{% endif %}</span>
+  <span class="right row">
+    <a class="btn ghost small" href="/p/{{ p.id }}/asset/{{ a.asset_id }}">Checks, provenance and gates</a>
+    <a class="btn ghost small" href="/p/{{ p.id }}/edit/{{ a.asset_id }}/history">Version history</a>
+  </span>
 </div>
+{% if busy %}<div class="lockbar" role="status"><b>{{ 'The AI worker is drafting this asset.' if a.state == 'queued' else 'Automated checks are running on the new revision.' }}</b> The document is read only until it finishes; this page refreshes.</div><meta http-equiv="refresh" content="8">{% endif %}
+{% if draft and draft.returned_note %}<div class="note"><b>Returned to the author:</b> {{ draft.returned_note }}</div>{% endif %}
+{% if not editable and not busy %}<div class="note">You can read and comment. Writing is for Instructional Designers, Magic SMEs and Editors.</div>{% endif %}
+
+<div class="doc-shell">
 <div>
-<h3>Owners</h3>{% set o = a.owners or {} %}
-<form method="post" action="/p/{{p.id}}/studio/owners"><input type="hidden" name="asset" value="{{ a.asset_id }}">
-{% for f, lbl, rl in [('author','Author (ID)','Instructional Designer'),('sme','Magic SME','SME'),('reviewer','Reviewer','')] %}
-<p><label class="muted">{{ lbl }}</label><br><select name="{{ f }}" style="width:100%"><option value="">-</option>{% for m in team.members if (not rl or rl in m.role) %}<option {{ 'selected' if o.get(f) == m.name }}>{{ m.name }}</option>{% endfor %}</select></p>{% endfor %}
-<button class="sec">Save owners</button></form>
-<h3>Findings on r{{ a.revision }}</h3>
-{% for f in findings %}<div class="sev-{{ f.severity }}" style="font-size:12px">{{ f.severity }}: <span style="font-weight:400;color:#1A1A1A">{{ f.message }}</span></div>{% else %}<p class="muted">None.</p>{% endfor %}
-<h3 id="comments">Comments</h3>
-{% for cm in comments if not cm.parent %}
-<div class="card {{ 'c2' if cm.status=='open' else 'cw' }}" style="margin-bottom:6px;padding:8px 10px"><b>{{ cm.by }}</b> <span class="muted">{{ cm.role }} | {{ cm.at[:16] }}{% if cm.anchor %} | {{ cm.anchor }}{% endif %}</span>
-<p style="margin:4px 0">{{ cm.body }}</p>
-{% for rp in comments if rp.parent == cm.comment_id %}<div style="margin-left:12px;border-left:2px solid #D2C1FF;padding-left:8px"><b>{{ rp.by }}</b> <span class="muted">{{ rp.at[:16] }}</span><br>{{ rp.body }}</div>{% endfor %}
-{% if cm.status == 'open' %}<form method="post" action="/p/{{p.id}}/studio/comment" class="inline" style="margin-top:4px"><input type="hidden" name="asset" value="{{ a.asset_id }}"><input type="hidden" name="parent" value="{{ cm.comment_id }}"><input name="body" placeholder="Reply" style="width:150px"><button class="sec">Reply</button></form>
-<form method="post" action="/p/{{p.id}}/studio/resolve" class="inline"><input type="hidden" name="cid" value="{{ cm.comment_id }}"><input type="hidden" name="asset" value="{{ a.asset_id }}"><button class="sec">Resolve</button></form>
-{% else %}<span class="pill ok">resolved by {{ cm.resolved_by }}</span>{% endif %}</div>{% endfor %}
-<form method="post" action="/p/{{p.id}}/studio/comment"><input type="hidden" name="asset" value="{{ a.asset_id }}">
-<select name="anchor" style="width:100%"><option value="">Whole asset</option>{% for sc in c.screens or [] %}<option>{{ sc.heading }}</option>{% endfor %}{% for it in c.get('items') or [] %}<option>{{ it.item_id }}</option>{% endfor %}</select>
-<textarea name="body" rows="3" placeholder="Comment. Use @Magic SME or @UMGC Program Lead to notify." style="margin-top:4px"></textarea><button>Post comment</button></form>
-</div></div>
+  <div class="collabbar" aria-live="polite">
+    <span class="presence" id="presence"></span>
+    <span id="status" class="muted">Connecting...</span>
+    <span class="savestate" id="saved">{{ 'Edits save automatically. Everyone in this document sees changes and cursors live.' if editable else 'Read only' }}</span>
+  </div>
+  {% if kind in ('module', 'perf') %}
+  <div class="toolbar" id="toolbar" role="toolbar" aria-label="Formatting">
+    <button type="button" data-cmd="screen" title="Start a new screen (heading)">{{ 'Screen' if kind == 'module' else 'Section' }}</button>
+    <button type="button" data-cmd="sub" title="Sub-heading (Practice, Summary)">Sub-heading</button>
+    <button type="button" data-cmd="para">Text</button><span class="sep"></span>
+    <button type="button" data-cmd="bold" aria-label="Bold"><b>B</b></button><button type="button" data-cmd="italic" aria-label="Italic"><i>I</i></button>
+    <button type="button" data-cmd="bullets">Bullets</button><button type="button" data-cmd="numbers">Numbered</button><button type="button" data-cmd="quote">Quote</button><span class="sep"></span>
+    {% if kind == 'module' %}<button type="button" data-cmd="media" title="Insert an image or diagram with alt text">Image with alt text</button><span class="sep"></span>{% endif %}
+    <button type="button" data-cmd="undo">Undo</button><button type="button" data-cmd="redo">Redo</button>
+  </div>
+  <div class="page"><div id="doc"></div></div>
+  <p class="muted">{% if kind == 'module' %}Each <b>Screen</b> heading starts a screen. Cite sources inline as [SRC-EXAM] or [SRC-U01]. Sub-headings named Practice and Summary hold the practice prompts (one per bullet) and the Module summary.{% else %}Sections: Task, Steps (numbered), Rubric (one bullet per row: criterion | level 1 | level 2 | level 3 | level 4), Grading.{% endif %}</p>
+  {% else %}
+  <div id="doc" role="region" aria-label="Item bank grid"></div>
+  <p class="muted">One row per item. Rationales: <code>A: why || B: why || C: why || D: why</code>. Add a row for a new item.</p>
+  {% endif %}
+
+  {% if editable %}
+  <form method="post" action="/p/{{ p.id }}/edit/{{ a.asset_id }}/submit" id="submitform" class="card tint mt">
+    <h3>Submit this revision</h3>
+    <p class="muted">Submitting turns the shared draft into revision r{{ a.revision + 1 }}. Automated checks run, then the five validation gates. Everyone who edited is recorded on the provenance record.</p>
+    {% if live %}<div class="row"><label for="cc">Change class</label><select id="cc" name="change_class"><option value="routine">routine (standing approval)</option><option value="material">material (UMGC approves)</option></select>
+    <label for="cn" class="sr-only">Change note</label><input id="cn" name="change_note" placeholder="What changed and why" style="min-width:300px"></div>
+    <p class="muted">The Program is live, so the revision becomes a change ticket.</p>{% endif %}
+    <div class="row"><button>Submit revision</button>
+    {% if draft %}<button class="sec" formaction="/p/{{ p.id }}/edit/{{ a.asset_id }}/discard" formnovalidate onclick="return confirm('Discard the working draft for everyone? The current revision stays.')">Discard draft</button>{% endif %}</div>
+  </form>
+  {% endif %}
+</div>
+
+<aside aria-label="Assist, comments and details">
+  {% if editable and kind in ('module','perf') %}
+  <div class="panel"><h3>AI assist from approved sources</h3>
+    <div class="field"><label for="as-h">Screen</label><select id="as-h" class="w100">{% for h in screens %}<option>{{ h }}</option>{% endfor %}<option value="">New screen</option></select></div>
+    <div class="field"><label for="as-i">What to write</label><textarea id="as-i" rows="2" placeholder="e.g. Explain how a SIEM correlates alerts, with one workplace example"></textarea></div>
+    <button type="button" class="small" onclick="assist()">Draft a block</button>
+    <div id="as-out" class="mt" aria-live="polite"></div>
+    <p class="muted">Grounded only in approved sources ({{ pack_ids|join(', ') }}). Insert puts it at your cursor; edit before submitting.</p>
+  </div>
+  {% endif %}
+  <div class="panel" id="comments"><h3>Comments</h3>
+    <div class="field"><label for="c-anchor">On</label><select id="c-anchor" class="w100"><option value="">Whole asset</option>{% for h in screens %}<option>{{ h }}</option>{% endfor %}</select></div>
+    <div class="field"><label for="c-body">Comment</label><textarea id="c-body" rows="2" placeholder="@SME please check the port numbers"></textarea></div>
+    <button type="button" class="small" onclick="comment()">Comment</button>
+    <div id="c-list" aria-live="polite"></div>
+  </div>
+  {% if findings %}<div class="panel"><h3>Findings on r{{ a.revision }}</h3>{% for f in findings %}<div style="margin:6px 0"><span class="sev-{{ f.severity }}">{{ f.severity }}</span> <span class="muted">Gate {{ f.gate }}, {{ f.check }}</span><div>{{ f.message }}</div></div>{% endfor %}</div>{% endif %}
+  <div class="panel"><h3>Owners</h3>
+    {% set o = a.owners or {} %}
+    {% if can('owners.assign') %}<form method="post" action="/p/{{ p.id }}/owners"><input type="hidden" name="asset" value="{{ a.asset_id }}">
+    {% for k, l in [('author','Author (ID)'),('sme','Magic SME'),('reviewer','Reviewer')] %}<div class="field"><label for="o-{{ k }}">{{ l }}</label><select id="o-{{ k }}" name="{{ k }}" class="w100"><option value="">unassigned</option>{% for m in team.members %}<option {{ 'selected' if o.get(k) == m.name }}>{{ m.name }}</option>{% endfor %}</select></div>{% endfor %}
+    <button class="small sec">Save owners</button></form>
+    {% else %}<div class="kv"><div>Author</div><div>{{ o.author or 'unassigned' }}</div><div>Magic SME</div><div>{{ o.sme or 'unassigned' }}</div><div>Reviewer</div><div>{{ o.reviewer or 'unassigned' }}</div></div>{% endif %}
+  </div>
+  <div class="panel"><h3>Skills and objectives</h3>
+    {% for sid in a.skill_ids %}<div><b>{{ sid }}</b> {{ (skills.get(sid) or {}).get('lightcast_skill_name') or (skills.get(sid) or {}).get('name') }} <span class="muted">{{ (skills.get(sid) or {}).get('lightcast_skill_id') }}</span></div>{% endfor %}
+    <p class="muted">Objectives: {{ (a.objective_ids or [])|join(', ') }}</p>
+  </div>
+</aside>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script src="/static/collab.js"></script>
 <script>
-async function assist(i){const h=document.querySelector('[name=s'+i+'_heading]').value;const t=document.getElementById('t'+i);
-const ins=document.getElementById('ai'+i).value||'Draft this screen for working adult learners';document.getElementById('n'+i).textContent='Drafting from the approved source pack...';
-const r=await fetch('/p/{{p.id}}/studio/assist',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({instruction:ins,heading:h,current:t.value,asset:'{{ a.asset_id }}'})});
-const d=await r.json();if(d.text){t.value=d.text;document.getElementById('c'+i).value=d.citations.join(', ');}document.getElementById('n'+i).textContent=d.note;}
+const D = {{ doc|tojson }};
+const PID = {{ p.id }}, ASSET = {{ a.asset_id|tojson }};
+const savedEl = document.getElementById('saved');
+let handle;
+async function save(payload) {
+  if (!D.editable) return;
+  savedEl.textContent = 'Saving...';
+  try {
+    const r = await fetch(D.save, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(payload)});
+    const d = await r.json();
+    savedEl.textContent = r.ok ? `Saved ${d.saved_at} (${d.summary})` : (d.error || 'Not saved');
+  } catch (e) { savedEl.textContent = 'Offline: your edits are kept and will sync'; }
+}
+const common = {room: D.room, user: D.user, editable: D.editable, canSeed: D.canSeed,
+  presenceEl: document.getElementById('presence'), statusEl: document.getElementById('status')};
+if (D.kind === 'items') {
+  handle = SCE.mountGrid(document.getElementById('doc'), {...common, columns: D.columns, seedRows: D.rows, addLabel: 'Add item',
+    onChange: rows => save({rows})});
+} else {
+  handle = SCE.mountDoc(document.getElementById('doc'), {...common, seedHtml: D.seedHtml, toolbarEl: document.getElementById('toolbar'),
+    label: ASSET + ' document', placeholder: 'Start writing. Use Screen to start a new screen.', onChange: html => save({html})});
+}
+const sf = document.getElementById('submitform');
+if (sf) sf.addEventListener('submit', async (e) => {
+  if (e.submitter && e.submitter.formAction && e.submitter.formAction.endsWith('/discard')) return;
+  e.preventDefault();
+  await save(D.kind === 'items' ? {rows: handle.rows()} : {html: handle.html()});
+  sf.submit();
+});
+
+function esc(s) { return String(s || '').replace(/[&<>"]/g, c => ({'&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;'}[c])); }
+async function assist() {
+  const out = document.getElementById('as-out');
+  out.textContent = 'Drafting from approved sources...';
+  const r = await fetch(`/p/${PID}/assist`, {method: 'POST', headers: {'Content-Type': 'application/json'},
+    body: JSON.stringify({instruction: document.getElementById('as-i').value, heading: document.getElementById('as-h').value, current: '', asset: ASSET})});
+  const d = await r.json();
+  if (!d.text) { out.innerHTML = `<p class="muted">${esc(d.note || d.error)}</p>`; return; }
+  const cites = (d.citations || []).map(c => `[${c}]`).join(' ');
+  out.innerHTML = `<div class="screen">${esc(d.text)} <span class="cite">${esc(cites)}</span></div><p class="muted">${esc(d.note)}</p><button type="button" class="small" id="as-ins">Insert at cursor</button>`;
+  document.getElementById('as-ins').onclick = () => handle.insert(`<p>${esc(d.text)} ${esc(cites)}</p>`);
+}
+async function loadComments() {
+  const r = await fetch(`/p/${PID}/comments.json?asset=${encodeURIComponent(ASSET)}`);
+  if (!r.ok) return;
+  const rows = await r.json();
+  const top = rows.filter(c => !c.parent);
+  document.getElementById('c-list').innerHTML = top.length ? top.reverse().map(c => {
+    const replies = rows.filter(x => x.parent === c.comment_id);
+    return `<div class="comment ${c.status}"><span class="by">${esc(c.by)}</span> <span class="muted">${esc(c.role)} | ${esc(c.at)}${c.anchor ? ' | ' + esc(c.anchor) : ''}</span><div>${esc(c.body)}</div>
+      ${replies.map(x => `<div class="comment reply"><span class="by">${esc(x.by)}</span> <span class="muted">${esc(x.at)}</span><div>${esc(x.body)}</div></div>`).join('')}
+      ${c.status === 'open' ? `<button type="button" class="ghost small" onclick="reply('${c.comment_id}')">Reply</button><button type="button" class="ghost small" onclick="resolve('${c.comment_id}')">Resolve</button>` : '<span class="muted">resolved by ' + esc(c.resolved_by) + '</span>'}</div>`;
+  }).join('') : '<p class="muted">No comments yet.</p>';
+}
+async function post(url, body) { const r = await fetch(url, {method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify(body)}); const d = await r.json(); if (!r.ok) alert(d.error); return r.ok; }
+async function comment() {
+  const b = document.getElementById('c-body');
+  if (await post(`/p/${PID}/comment`, {asset: ASSET, anchor: document.getElementById('c-anchor').value, body: b.value})) { b.value = ''; loadComments(); }
+}
+async function reply(cid) { const t = prompt('Reply'); if (t && await post(`/p/${PID}/comment`, {asset: ASSET, body: t, parent: cid})) loadComments(); }
+async function resolve(cid) { if (await post(`/p/${PID}/comment/resolve`, {cid})) loadComments(); }
+loadComments(); setInterval(loadComments, 10000);
 </script>
 {% endblock %}

@@ -1,0 +1,8 @@
+{% extends "base.html" %}
+{% from "_doc.html" import render %}
+{% block h1 %}{{ doc.title }}{% endblock %}
+{% block body %}
+<div class="row"><p class="muted">Deliverable {{ doc.code }} | generated from the Program's records just now. A draft for the owner's review; acceptance is recorded in Quality and Release > Deliverables.</p>
+<span class="right row">{% if can('docs.generate') %}<a class="btn" href="/p/{{ p.id }}/doc/{{ key }}.docx">Download Word</a>{% else %}<a class="btn sec" href="/p/{{ p.id }}/doc/{{ key }}.docx">Download Word</a>{% endif %}</span></div>
+{{ render(doc) }}
+{% endblock %}

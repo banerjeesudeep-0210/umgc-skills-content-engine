@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Your account</h1>
+<div class="grid2">
+<div class="card">
+  <div class="kv"><div>Name</div><div>{{ user.name }}</div><div>Username</div><div>{{ user.username }}</div><div>Role</div><div>{{ user.role }}</div>
+  <div>Organization</div><div>{{ 'UMGC' if user.role.startswith('UMGC') else 'Magic' }}</div>{% if user.expertise %}<div>Expertise</div><div>{{ user.expertise }}</div>{% endif %}</div>
+  <h3>What your role can do</h3>
+  <ul>{% for perm, label in LABELS.items() %}{% if can(perm) %}<li>{{ label }}</li>{% endif %}{% endfor %}</ul>
+</div>
+<form method="post" action="/account" class="card">
+  <h3>Change password</h3>
+  <div class="field"><label for="c">Current password</label><input id="c" type="password" name="current" class="w100" required autocomplete="current-password"></div>
+  <div class="field"><label for="n">New password (10 or more characters)</label><input id="n" type="password" name="new" class="w100" minlength="10" required autocomplete="new-password"></div>
+  <div class="field"><label for="f">Confirm new password</label><input id="f" type="password" name="confirm" class="w100" minlength="10" required autocomplete="new-password"></div>
+  <button>Change password</button>
+</form>
+</div>
+{% endblock %}

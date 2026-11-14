@@ -1,0 +1,21 @@
+{
+ "name": "sce-collab",
+ "private": true,
+ "description": "Live co-editing bundle for the Skills Content Engine. Rebuild: npm install && npm run build",
+ "scripts": {
+  "build": "esbuild collab.js --bundle --minify --format=iife --target=es2019 --outfile=../collab.js"
+ },
+ "dependencies": {
+  "@tiptap/core": "^2.27.3",
+  "@tiptap/extension-collaboration": "^2.27.3",
+  "@tiptap/extension-collaboration-cursor": "^2.27.3",
+  "@tiptap/extension-image": "^2.27.3",
+  "@tiptap/extension-placeholder": "^2.27.3",
+  "@tiptap/pm": "^2.27.3",
+  "@tiptap/starter-kit": "^2.27.3",
+  "esbuild": "^0.24.2",
+  "y-prosemirror": "^1.2.15",
+  "y-websocket": "^2.1.0",
+  "yjs": "^13.6.24"
+ }
+}

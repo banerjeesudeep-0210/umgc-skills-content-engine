@@ -16,7 +16,7 @@ from __future__ import annotations
 import datetime as dt
 from contextlib import contextmanager
 
-from sqlalchemy import (JSON, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text,
+from sqlalchemy import (JSON, LargeBinary, Boolean, Column, DateTime, Float, ForeignKey, Integer, String, Text,
                         UniqueConstraint, create_engine, event, select)
 from sqlalchemy.orm import declarative_base, sessionmaker
 
@@ -125,6 +125,35 @@ class Statement(Base):
     duration_min = Column(Float)
     extra = Column(JSON, default=dict)
     at = Column(DateTime, default=now)
+
+
+class User(Base):
+    __tablename__ = "users"
+    id = Column(Integer, primary_key=True)
+    username = Column(String(80), unique=True, index=True)
+    name = Column(String(160))
+    email = Column(String(200), default="")
+    role = Column(String(80))
+    password_hash = Column(String(300))
+    active = Column(Boolean, default=True)
+    expertise = Column(Text, default="")
+    must_change = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=now)
+    last_login = Column(DateTime)
+
+
+class Setting(Base):
+    __tablename__ = "settings"
+    key = Column(String(80), primary_key=True)
+    value = Column(Text)
+
+
+class CollabRoom(Base):
+    __tablename__ = "collab_rooms"
+    room = Column(String(200), primary_key=True)
+    state = Column(LargeBinary)
+    seeded_by = Column(String(120), default="")
+    updated_at = Column(DateTime, default=now, onupdate=now)
 
 
 class WorkerBeat(Base):

@@ -1,0 +1,9 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>My work</h1>
+<p class="lead">Decisions your role makes, assets assigned to you, comments that mention you, and deliverables waiting for your acceptance, across every Program.</p>
+{% if not rows %}<div class="card tint">Nothing waiting for you right now.</div>{% else %}
+<table><thead><tr><th>Type</th><th>Program</th><th>Item</th><th></th></tr></thead><tbody>
+{% for r in rows %}<tr><td><span class="pill {{ 'ok' if r.kind in ('Decision','Acceptance') else 'soft' }}">{{ r.kind }}</span></td><td>{{ r.p.name }}</td><td>{{ r.text }}</td><td><a class="btn small" href="{{ r.href }}">Open</a></td></tr>{% endfor %}
+</tbody></table>{% endif %}
+{% endblock %}

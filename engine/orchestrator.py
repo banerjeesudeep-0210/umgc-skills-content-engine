@@ -21,6 +21,7 @@ UMGC_GATES = {
     "magic.employers": ("Employer validation of the skills map (three employers, Maryland-based where available)", "Learning Experience Architect", "magic"),
     "umgc.skills_map": ("Gate 1: UMGC approves the skills map and competencies", "UMGC Program Lead", "umgc"),
     "umgc.blueprint": ("Gate 2: UMGC approves the Program Design Blueprint (review window 1, 5 business days)", "UMGC Program Lead", "umgc"),
+    "magic.outline": ("Module outline approved: objectives, verbs, skills, reading and practice mapped for every Module", "Instructional Designer or Learning Experience Architect", "outline"),
     "umgc.prototype": ("Prototype Module review (Week 4): becomes the reference standard", "UMGC Program Lead", "umgc"),
     "umgc.sprint1": ("Review window 2: Sprint 1 content (5 business days)", "UMGC content approval authority", "umgc"),
     "umgc.sprint2": ("Review window 3: Sprint 2 content (5 business days)", "UMGC content approval authority", "umgc"),
@@ -156,6 +157,18 @@ def _advance(s, p):
         _set_stage(s, p, "design", "awaiting UMGC")
         return
 
+    # Build starts from the Module outline: objectives mapped to skills and verbs, screens, reading, practice
+    ol = get_record(s, pid, "outline")
+    planned = bool(list_records(s, pid, "asset"))
+    if not ol:
+        enqueue(s, pid, "design", "design.outline", "design.outline:1")
+        if not planned:
+            _set_stage(s, p, "build", "drafting outline")
+            return
+    elif not _approved(umgc_gate(s, pid, "magic.outline")) and not planned:  # always opened; blocks only before any asset exists
+        _set_stage(s, p, "build", "awaiting outline approval")
+        return
+
     # Build: prototype, then Sprint 1, then Sprint 2
     _set_stage(s, p, "build")
     plan_assets(s, pid, bp.data, sm.data)
@@ -275,20 +288,12 @@ def _advance(s, p):
 
 
 # ------------------------------------------------------------------ human decisions
-ROLE_RULES = {1: "SME", 2: ("Instructional Designer", "Learning Experience Architect"), 3: "Accessibility", 4: ("Instructional Designer", "Accessibility"), 5: ("Editor", "Project Manager")}
-
-
 def role_allowed(gate_kind, gate_no, role):
-    """Seat check when the reviewer has told us who they are. Autopilot and API calls pass no role."""
+    """Server-side permission check. Internal calls (autopilot, tests) pass no role."""
     if not role:
         return True
-    if gate_kind == "umgc":
-        return role.startswith("UMGC")
-    if gate_kind == "magic":
-        return "Learning Experience Architect" in role
-    need = ROLE_RULES.get(gate_no, "")
-    need = need if isinstance(need, tuple) else (need,)
-    return any(n in role for n in need)
+    from .rbac import can, gate_perm
+    return can(role, gate_perm(gate_kind, gate_no))
 
 
 def decide_gate(program_id: int, gate_key: str, decision: str, by: str, note: str = "", force: bool = False, role: str = "") -> str:
@@ -396,7 +401,13 @@ def decide_ticket(program_id: int, ticket_id: str, decision: str, by: str, role:
             return f"Ticket already {d['status']}"
         if not by.strip():
             return "Enter the decision maker's name"
-        if decision == "approve" and change_class == "material" and role != "UMGC":
+        from .rbac import can
+        if role not in ("", "UMGC", "Magic"):
+            need = "ticket.material" if change_class == "material" else "ticket.routine"
+            if not can(role, need) and not (need == "ticket.routine" and can(role, "ticket.material")):
+                return ("Material changes need a UMGC approver (Technical Proposal 2.2.3.2)." if change_class == "material"
+                        else "Your role cannot approve change tickets.")
+        elif decision == "approve" and change_class == "material" and role != "UMGC":
             return "Material changes need UMGC approval first (Technical Proposal 2.2.3.2). Record the UMGC approver."
         d["status"] = "approved" if decision == "approve" else "rejected"
         d["change_class"] = change_class

@@ -1,0 +1,102 @@
+{% extends "base.html" %}
+{% from "_collab.html" import gatebox, lockbar, grid as gridm %}
+{% from "_doc.html" import render %}
+{% block head %}{% if jobs_open and tab == 'board' %}<meta http-equiv="refresh" content="10">{% endif %}{% endblock %}
+{% block body %}
+{% if tab == 'outline' %}
+{% if not has_bp %}<div class="card tint">The Module outline is drafted once UMGC approves the Blueprint at Gate 2.</div>
+{% elif not outline %}<div class="card tint">The design worker is drafting the Module outline from the approved Blueprint. This page refreshes.</div><meta http-equiv="refresh" content="5">
+{% else %}
+{% set rows = outline.rows %}{% set mis = rows|rejectattr('alignment','equalto','aligned')|list %}
+<p class="lead">The content plan for every Module, before anything is written: each objective's action verb and Bloom level, the Lightcast skills it builds and each skill statement's verb, the screens, the offline reading and the practice. The Instructional Designer and SMEs edit it together; build drafts each Module from its approved row.</p>
+<div class="stats">
+  <div><div class="v">{{ rows|length }}</div><div class="l">Modules outlined</div></div>
+  <div><div class="v">{{ rows|map(attribute='week')|unique|list|length }}</div><div class="l">weeks</div></div>
+  <div><div class="v">{{ rows|length - mis|length }}/{{ rows|length }}</div><div class="l">verbs aligned to skill exit levels</div></div>
+  <div><div class="v">{{ (rows|sum(attribute='reading_min') / 60)|round(1) }} h</div><div class="l">offline reading</div></div>
+  <div><div class="v">{{ (rows|sum(attribute='practice_min') / 60)|round(1) }} h</div><div class="l">practice</div></div>
+</div>
+{{ lockbar(ol_lock, 'outline', p, can('outline.approve')) }}
+<p class="muted">Edit objective and skill IDs (comma separated), screens, reading and practice (one per line) and minutes. Verbs and alignment recompute on every save. Alignment means the highest objective verb reaches each skill's exit level (Working: Understand, Proficient: Apply, Advanced: Analyze).</p>
+{{ gridm(grid, 'Module outline grid', 'Add row') }}
+<div class="grid2 mt">
+  <div>{{ gatebox(ol_gate, p, '/p/' ~ p.id ~ '/develop?tab=outline', can('outline.approve')) }}
+    {% if mis and ol_gate and ol_gate.status == 'pending' %}<p class="muted">{{ mis|length }} Module(s) have verbs below a skill's exit level: {{ mis|map(attribute='module_id')|join(', ') }}.</p>{% endif %}</div>
+  <div class="card tint"><h3>Redraft from the Blueprint</h3><p class="muted">Replaces the outline with a fresh draft from the current Blueprint and source pack. The current version stays in version history.</p>
+  {% if can('outline.approve') and not ol_lock.locked %}<form method="post" action="/p/{{ p.id }}/outline/redraft" onsubmit="return confirm('Replace the outline with a new draft?')"><button class="sec small">Redraft the outline</button></form>{% endif %}</div>
+</div>
+{% endif %}
+
+{% elif tab == 'weekly' %}
+{% if not weeks %}<div class="card tint">The weekly map appears once the Module outline exists.</div>
+{% else %}
+<p class="lead">Everything a learner does each week, put together by Magic: online Modules, offline reading, practice and assessments, timed against {{ spec.program.weekly_hours }} learner hours a week, with the build state and authors of every piece.</p>
+<div class="tablewrap" style="max-height:none"><table><thead><tr><th>Week</th><th class="num">Online</th><th class="num">Offline reading</th><th class="num">Practice</th><th class="num">Assessment</th><th class="num">Total</th><th class="num">Plan</th><th>Fit</th><th>Built</th></tr></thead><tbody>
+{% for w in weeks %}<tr><td><a href="#week{{ w.week }}">Week {{ w.week }}</a> <span class="muted">{{ w.course }}</span></td><td class="num">{{ (w.online/60)|round(1) }} h</td><td class="num">{{ (w.reading_min/60)|round(1) }} h</td><td class="num">{{ (w.practice_min/60)|round(1) }} h</td><td class="num">{{ (w.assess_min/60)|round(1) }} h</td><td class="num"><b>{{ (w.total/60)|round(1) }} h</b></td><td class="num">{{ (w.target/60)|round(1) }} h</td><td><span class="pill {{ 'ok' if w.fit == 'on plan' else 'warn' }}">{{ w.fit }}</span></td><td>{{ w.built }}/{{ w.pieces }} validated</td></tr>{% endfor %}</tbody></table></div>
+{% for w in weeks %}
+<h2 id="week{{ w.week }}">Week {{ w.week }}: {{ w.course }}</h2>
+<div class="grid2">
+<div>
+  <h3>Online Modules</h3>
+  <table><thead><tr><th>Module</th><th>Objective verbs</th><th>Skills</th><th class="num">Min</th><th>State</th><th>Put together by</th></tr></thead><tbody>
+  {% for m in w.modules %}<tr><td><a href="/p/{{ p.id }}/edit/M-{{ m.module_id }}">{{ m.module_id }}</a> {{ m.title }}</td><td class="muted">{{ m.objective_verbs }}</td><td class="muted">{{ m.skill_ids }}</td><td class="num">{{ m.online_min|int }}</td>
+  <td><span class="pill {{ 'ok' if m.state=='validated' else 'soft' }}">{{ m.state }}</span>{% if m.revision %} r{{ m.revision }}{% endif %}</td><td class="muted">{{ m.authors }}{% if m.ai %}<br>{{ m.ai }}{% endif %}</td></tr>{% endfor %}</tbody></table>
+  <h3>Assessments</h3>
+  <table><thead><tr><th>Assessment</th><th>Type</th><th>Grading</th><th class="num">Min</th><th>State</th></tr></thead><tbody>
+  {% for a in w.assessments %}<tr><td><a href="/p/{{ p.id }}/edit/A-{{ a.assessment_id }}">{{ a.assessment_id }}</a> {{ a.name }}</td><td>{{ a.type }}</td><td>{{ a.auto_grade }}{% if a.persistent_state %}, saves work{% endif %}</td><td class="num">{{ a.minutes }}</td><td><span class="pill {{ 'ok' if a.state=='validated' else 'soft' }}">{{ a.state }}</span></td></tr>{% else %}<tr><td colspan="5" class="muted">No graded assessment this week.</td></tr>{% endfor %}</tbody></table>
+</div>
+<div>
+  <h3>Offline reading ({{ (w.reading_min/60)|round(1) }} h)</h3>
+  <ul>{% for mid, x in w.reading %}<li><span class="muted">{{ mid }}</span> {{ x }}</li>{% else %}<li class="muted">None planned.</li>{% endfor %}</ul>
+  <h3>Practice ({{ (w.practice_min/60)|round(1) }} h)</h3>
+  <ul>{% for mid, x in w.practice %}<li><span class="muted">{{ mid }}</span> {{ x }}</li>{% else %}<li class="muted">None planned.</li>{% endfor %}</ul>
+</div></div>
+{% endfor %}
+<p class="mt"><a class="btn sec" href="/p/{{ p.id }}/download/workbook">Download with the workbook (Outline and Weekly_Map sheets)</a></p>
+{% endif %}
+
+{% elif tab == 'board' %}
+<form method="get" class="row" style="margin-bottom:12px"><input type="hidden" name="tab" value="board">
+  <label for="fc" class="sr-only">Course</label><select id="fc" name="course"><option value="">All Courses</option>{% for cid, cn in courses %}<option value="{{ cid }}" {{ 'selected' if cid == course }}>{{ cid }} {{ cn[:40] }}</option>{% endfor %}</select>
+  <label for="fs" class="sr-only">State</label><select id="fs" name="state"><option value="">Any state</option>{% for s_ in ['queued','drafted','checked','g1','g2','g3','g4','g5','author','validated'] %}<option {{ 'selected' if s_ == state }}>{{ s_ }}</option>{% endfor %}</select>
+  <button class="sec small">Filter</button><a class="btn ghost right" href="/p/{{ p.id }}/develop/tracker.csv">Export tracker for Smartsheet (CSV)</a></form>
+{% if not assets %}<div class="card tint">{% if state or course %}No assets match.{% else %}Assets are planned when UMGC approves the Blueprint at Gate 2. Workers then draft them: the prototype Module first, then Sprint 1 and Sprint 2.{% endif %}</div>
+{% else %}
+<div class="tablewrap" style="max-height:none"><table><thead><tr><th>Asset</th><th>Type</th><th>Course</th><th>Sprint</th><th>Rev</th><th>State</th><th>Owners</th><th>Working draft</th><th>Comments</th><th></th></tr></thead><tbody>
+{% for a in assets %}{% set o = a.owners or {} %}{% set nc = comments|selectattr('asset','equalto',a.asset_id)|selectattr('status','equalto','open')|list|length %}
+<tr><td><a href="/p/{{ p.id }}/asset/{{ a.asset_id }}"><b>{{ a.asset_id }}</b></a> {{ a.title }}{% if a.prototype %} <span class="pill soft">prototype</span>{% endif %}</td><td>{{ a.type }}</td><td>{{ a.course_id }}</td><td>{{ a.sprint }}</td><td class="num">{{ a.revision }}</td>
+<td><span class="pill {{ 'ok' if a.state=='validated' else ('warn' if a.state in ('author','g1','g2','g3','g4','g5') else '') }}">{{ {'author':'with author','queued':'AI drafting','drafted':'checks running','checked':'checked'}.get(a.state, a.state) }}</span></td>
+<td class="muted">{{ o.author or '-' }} / {{ o.sme or '-' }}</td>
+<td>{% if a.draft %}<span class="pill soft">{{ (a.draft.editors or [a.draft.edited_by])|join(', ') }}</span>{% endif %}</td><td class="num">{{ nc or '' }}</td>
+<td><a class="btn small {{ '' if a.state == 'author' else 'sec' }}" href="/p/{{ p.id }}/edit/{{ a.asset_id }}">{{ 'Edit' if can('content.edit') else 'Open' }}</a></td></tr>{% endfor %}</tbody></table></div>
+{% endif %}
+
+{% elif tab == 'reviews' %}
+<h2>UMGC review windows</h2>
+<p class="muted">Prototype Module (reference standard), then Sprint 1 and Sprint 2 content, 5 business days each. UMGC reviewers comment in the documents; the UMGC approver decides here.</p>
+<div class="grid3">{% for g in ug if ':' not in g.gate_key %}{{ gatebox(g, p, '/p/' ~ p.id ~ '/develop?tab=reviews', can('gate.umgc')) }}{% else %}<p class="muted">Review windows open as each batch clears the five validation gates.</p>{% endfor %}</div>
+<h2>Validation gates on every asset</h2>
+<div class="row">{% for n, v in VALIDATION_GATES.items() %}{% set lbl = v[0] %}{% set cnt = vg|selectattr('evidence.gate','equalto',n)|list|length %}<a class="btn small {{ '' if gate == n else 'sec' }}" href="?tab=reviews&gate={{ n }}">Gate {{ n }} {{ lbl }} ({{ cnt }})</a>{% endfor %}<a class="btn small ghost" href="?tab=reviews">All</a></div>
+{% set rows = vg|selectattr('evidence.gate','equalto',gate)|list if gate else vg %}
+{% if gate and rows and can('gate.val' ~ gate) %}
+<form method="post" action="/p/{{ p.id }}/bulk" class="card tint mt row"><input type="hidden" name="gate_no" value="{{ gate }}">
+  <span>Approve every Gate {{ gate }} item without blocking findings ({{ rows|length }} waiting). Items with critical or high findings stay for an individual decision.</span>
+  <label class="sr-only" for="bn">Note</label><input id="bn" name="note" placeholder="What you checked" style="min-width:240px"><button>Approve all eligible</button></form>{% endif %}
+<table class="mt"><thead><tr><th>Asset</th><th>Gate</th><th>Owner</th><th>Findings</th><th>Decision</th></tr></thead><tbody>
+{% for g in rows %}{% set n = g.evidence.gate %}<tr><td><a href="/p/{{ p.id }}/asset/{{ g.evidence.asset }}">{{ g.evidence.asset }}</a> r{{ g.evidence.revision }}</td><td>Gate {{ n }} {{ VALIDATION_GATES[n][0] }}</td><td class="muted">{{ g.owner_role }}</td>
+<td>{% for f in g.evidence.findings %}<div><span class="sev-{{ f.severity }}">{{ f.severity }}</span> {{ f.message }}</div>{% else %}<span class="muted">none</span>{% endfor %}</td>
+<td>{% if can('gate.val' ~ n) %}<form method="post" action="/p/{{ p.id }}/gate" class="inline"><input type="hidden" name="gate_key" value="{{ g.gate_key }}"><input type="hidden" name="back" value="/p/{{ p.id }}/develop?tab=reviews&gate={{ gate or '' }}">
+<label class="sr-only" for="vn{{ g.id }}">Note</label><input id="vn{{ g.id }}" name="note" placeholder="Note" style="width:150px"><button class="small" name="decision" value="approve">Approve</button><button class="small sec" name="decision" value="return">Return</button></form>{% else %}<span class="muted">{{ g.owner_role }} decides</span>{% endif %}</td></tr>
+{% else %}<tr><td colspan="5" class="muted">No validation decisions waiting{% if gate %} at Gate {{ gate }}{% endif %}.</td></tr>{% endfor %}</tbody></table>
+
+{% elif tab == 'comments' %}
+<p class="lead">Every comment across the Program's assets. Comments are made inside the documents, anchored to a screen or item; @mention a person or a role.</p>
+<table><thead><tr><th>Asset</th><th>Where</th><th>Comment</th><th>By</th><th>Status</th></tr></thead><tbody>
+{% for c in comments|reverse %}<tr><td><a href="/p/{{ p.id }}/edit/{{ c.asset }}#comments">{{ c.asset }}</a></td><td class="muted">{{ c.anchor or 'whole asset' }}</td><td>{{ c.body }}</td><td>{{ c.by }}<div class="muted">{{ c.role }} | {{ c.at }}</div></td><td><span class="pill {{ 'warn' if c.status=='open' else '' }}">{{ c.status }}</span></td></tr>
+{% else %}<tr><td colspan="5" class="muted">No comments yet.</td></tr>{% endfor %}</tbody></table>
+
+{% elif tab == 'guides' %}
+<div class="row"><p class="lead">Instructor and Learner Guides (deliverable 6.2.4), generated from the approved Blueprint and specification. Download as Word to edit and submit in the deliverables register.</p><a class="btn right" href="/p/{{ p.id }}/doc/guides.docx">Download Word</a></div>
+{{ render(guide) }}
+{% endif %}
+{% endblock %}

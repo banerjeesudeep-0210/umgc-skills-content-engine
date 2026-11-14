@@ -1,0 +1,19 @@
+{% extends "base.html" %}
+{% block body %}
+<div class="row"><h1>Programs</h1>
+  {% if can('program.create') %}<span class="right row"><form method="post" action="/programs/sample"><button class="sec">Start the 8-week sample Program</button></form><a class="btn" href="/programs/new">New Program</a></span>{% endif %}</div>
+<p class="lead">Each Program is one Task Order: set it up, build the skills map, design, develop, assure quality, release, then measure and improve for 12 months.</p>
+{% if not rows %}
+<div class="card tint mt"><h3>No Programs yet</h3><p>{% if can('program.create') %}Start the sample (Cybersecurity Operations Foundations, 8 weeks) to see the full workflow, or create a Program from a Task Order.{% else %}A Magic Project Manager or Learning Experience Architect creates Programs. You will see them here.{% endif %}</p></div>
+{% else %}
+<div class="tablewrap mt" style="max-height:none"><table>
+<thead><tr><th>Program</th><th>Duration</th><th>Stage</th><th>Next step</th><th>Waiting on UMGC</th><th>Validation decisions</th><th>Next milestone</th></tr></thead>
+<tbody>{% for r in rows %}{% set p = r.p %}
+<tr><td><a href="/p/{{ p.id }}"><b>{{ p.name }}</b></a><div class="muted">Task Order {{ r.spec.task_order.number }} | {{ r.spec.program.subject_area or r.spec.program.occupation }}</div></td>
+<td>{{ r.spec.program.duration_weeks }} weeks<div class="muted">{{ r.spec.program.weekly_hours }} h/week, {{ r.spec.program.courses }} Courses</div></td>
+<td>{{ dict(STAGES)[p.stage] }}<div><span class="pill {{ 'warn' if 'await' in p.status else ('ok' if 'live' in p.status else '') }}">{{ p.status }}</span></div></td>
+<td style="max-width:340px">{{ r.nxt.text }}{% if r.nxt.yours %} <span class="pill ok">you</span>{% endif %}</td>
+<td class="num">{{ r.umgc }}</td><td class="num">{{ r.val }}</td>
+<td>{% if r.next_ms %}{{ r.next_ms.name }}<div class="muted">{{ r.next_ms.due }}</div>{% else %}<span class="muted">All milestones past</span>{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+{% endif %}
+{% endblock %}

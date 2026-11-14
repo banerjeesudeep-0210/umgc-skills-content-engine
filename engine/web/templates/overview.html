@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_collab.html" import gatebox %}
+{% block head %}{% if jobs_open %}<meta http-equiv="refresh" content="8">{% endif %}
+<style>
+.wf{display:grid;grid-template-columns:150px repeat(8,minmax(112px,1fr));gap:3px;font-size:11.5px;margin-top:8px}
+.wf .lane{background:var(--ink);color:#fff;padding:10px;font-weight:600;font-size:12.5px}.wf .lane small{display:block;font-weight:400;color:var(--lav);font-size:10.5px}
+.wf .stg{background:var(--purple);color:#fff;padding:8px 10px;font-weight:600;text-align:center;font-size:11.5px}
+.wf .stg.done{background:var(--p500)}.wf .stg.cur{background:var(--ink)}.wf .stg.todo{background:var(--p300);color:var(--ink)}
+.wf .cell{padding:8px;min-height:84px;border:1px solid var(--rule);background:#fff}
+.wf .u{background:var(--p100)}.wf .m{background:var(--p50)}
+.wf .cell b{display:block;font-size:11.5px;margin-bottom:2px}.wf .cell .live{margin-top:5px;font-size:10.5px;color:var(--purple);font-weight:600}
+.wf .cell.cur{outline:2px solid var(--purple)}
+</style>{% endblock %}
+{% block body %}
+<div class="tracker" role="list" aria-label="Workflow stages">
+{% set links = {'define':'/skills','design':'/design','build':'/develop','qa':'/quality','deliver':'/quality?tab=releases','learn':'/learner','measure':'/insights','improve':'/improve'} %}
+{% for b in BOARD %}{% set c = live[b.key] %}
+  <a role="listitem" href="/p/{{ p.id }}{{ links[b.key] }}" class="{{ c.state }}" {% if c.state == 'cur' %}aria-current="step"{% endif %}><b>{{ b.n }}. {{ b.name }}</b><span class="st">{{ {'done':'Done','cur':'Now','todo':'Later'}[c.state] }} | {{ b.timing }}</span></a>
+{% endfor %}
+</div>
+<div class="stats">
+  <div><div class="v">{{ spec.program.duration_weeks }} wk</div><div class="l">{{ spec.program.weekly_hours }} learner hours a week, {{ total_hours }} total</div></div>
+  <div><div class="v">{{ spec.program.courses }}</div><div class="l">Courses</div></div>
+  <div><div class="v">{{ n_assets }}</div><div class="l">assets ({{ states.get('validated', 0) }} validated)</div></div>
+  <div><div class="v">{{ dels|selectattr('accepted')|list|length }}/{{ dels|length }}</div><div class="l">Attachment C deliverables accepted</div></div>
+  <div><div class="v">{{ p.release_version or '-' }}</div><div class="l">live release</div></div>
+</div>
+<div class="grid2">
+<div>
+  <h2>Decisions waiting</h2>
+  {% set pend = gates|selectattr('status','equalto','pending')|list %}
+  {% for g in pend %}
+    {% if g.gate_key == 'magic.employers' %}<div class="card lav"><b>{{ g.label }}</b><p>Recorded in <a href="/p/{{ p.id }}/skills?tab=validation">Skills Studio > Validation</a> by the Learning Experience Architect.</p></div>
+    {% elif g.gate_key in ('umgc.skills_map',) %}<div class="card lav"><b>{{ g.label }}</b><p>Review the skills map and decide in <a href="/p/{{ p.id }}/skills?tab=validation">Skills Studio > Validation and Gate 1</a>.</p></div>
+    {% elif g.gate_key == 'umgc.blueprint' %}<div class="card lav"><b>{{ g.label }}</b><p>Review and decide in <a href="/p/{{ p.id }}/design?tab=gate">Design Studio > Gate 2</a>.</p></div>
+    {% else %}{{ gatebox(g, p, '/p/' ~ p.id, can({'umgc': 'gate.umgc', 'magic': 'gate.magic', 'outline': 'outline.approve'}.get(g.kind, 'gate.umgc'))) }}{% endif %}
+    <div style="height:8px"></div>
+  {% else %}<p class="muted">No UMGC or Magic gate is waiting. {% if pending_val %}{{ pending_val }} asset validation decision(s) are in <a href="/p/{{ p.id }}/develop?tab=reviews">Development Studio > Review gates</a>.{% endif %}</p>{% endfor %}
+  <h2>Milestones</h2>
+  <table><thead><tr><th>Milestone</th><th>Week</th><th>Due</th></tr></thead><tbody>{% for m in ms %}<tr><td>{{ m.name }}</td><td>{{ m.week }}</td><td>{{ m.due }}</td></tr>{% endfor %}</tbody></table>
+  <div class="row mt">
+    {% if can('program.pause') %}<form method="post" action="/p/{{ p.id }}/pause"><button class="sec">{{ 'Resume' if p.status == 'paused' else 'Pause' }} Program</button></form>{% endif %}
+    {% if can('autopilot') %}<form method="post" action="/p/{{ p.id }}/autopilot"><button class="sec" title="Approves every gate that exit criteria allow and returns blocked assets for revision. Administrator only, for demos.">Demo autopilot</button></form>{% endif %}
+  </div>
+</div>
+<div>
+  <h2>UMGC gates</h2>
+  <table><thead><tr><th>Gate</th><th>Status</th><th>Decided by</th></tr></thead><tbody>
+  {% for g in gates if ':' not in g.gate_key %}<tr><td>{{ g.label }}</td><td><span class="pill {{ 'ok' if g.status=='approved' else ('warn' if g.status=='pending' else 'bad') }}">{{ g.status }}</span></td><td class="muted">{{ g.decided_by or g.owner_role }}</td></tr>{% else %}<tr><td colspan="3" class="muted">Gates open as the work reaches them.</td></tr>{% endfor %}</tbody></table>
+  <h2>Recent activity</h2>
+  <table><tbody>{% for e in events %}<tr><td class="muted" style="white-space:nowrap">{{ e.at.strftime('%m-%d %H:%M') }}</td><td>{{ e.actor }}</td><td>{{ e.message }}</td></tr>{% endfor %}</tbody></table>
+  <p><a href="/p/{{ p.id }}/audit">Full activity log</a></p>
+</div>
+</div>
+<details class="mt"><summary>Workflow board (Technical Proposal Figure 19): who does what at each stage, live</summary>
+<div class="wf">
+  <div></div>{% for b in BOARD %}<div class="stg {{ live[b.key].state }}">{{ b.n }} {{ b.name }}</div>{% endfor %}
+  <div class="lane">UMGC<small>Approval gates</small></div>
+  {% for b in BOARD %}{% set c = live[b.key] %}<div class="cell u {{ 'cur' if c.state=='cur' }}"><b>{{ b.umgc[0] }}</b>{{ b.umgc[1] }}{% for lbl, stt in c.gates %}<div class="live">{{ lbl }}: {{ stt }}</div>{% endfor %}{% if c.umgc %}<div class="live">{{ c.umgc }}</div>{% endif %}</div>{% endfor %}
+  <div class="lane">Magic AI POD<small>Human owners</small></div>
+  {% for b in BOARD %}{% set c = live[b.key] %}<div class="cell m {{ 'cur' if c.state=='cur' }}"><b>{{ b.pod[0] }}</b>{{ b.pod[1] }}{% if c.pod %}<div class="live">{{ c.pod }}</div>{% endif %}</div>{% endfor %}
+  <div class="lane">AI layer<small>Workers</small></div>
+  {% for b in BOARD %}{% set c = live[b.key] %}<div class="cell {{ 'cur' if c.state=='cur' }}"><b>{{ b.ai[0] }}</b>{{ b.ai[1] }}{% if c.ai %}<div class="live">{{ c.ai }}</div>{% endif %}</div>{% endfor %}
+  <div class="lane">Learners and platform<small>Brightspace, LTI 1.3</small></div>
+  {% for b in BOARD %}{% set c = live[b.key] %}<div class="cell {{ 'cur' if c.state=='cur' }}"><b>{{ b.lp[0] }}</b>{{ b.lp[1] }}{% if c.lp %}<div class="live">{{ c.lp }}</div>{% endif %}</div>{% endfor %}
+</div></details>
+{% endblock %}

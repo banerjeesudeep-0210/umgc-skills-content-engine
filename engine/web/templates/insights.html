@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% block body %}
+{% if tab == 'dashboard' %}
+{% if not m %}<div class="card tint">Measurement starts when the first release is live and learner data arrives.</div>{% else %}
+<p class="muted">Release {{ m.release }} | {{ m.statements }} xAPI statements | simulated cohort until UMGC learners arrive</p>
+<div class="band">
+  <div><div class="v">{{ m.completion.within_150_pct }}%</div><div class="l">completed within 150 percent of expected time (target {{ m.completion.target_150_pct }}%)</div></div>
+  <div><div class="v">{{ m.completion.within_100_pct }}%</div><div class="l">within 100 percent</div></div>
+  <div><div class="v">{{ m.completion.completed_pct }}%</div><div class="l">completed at any pace</div></div>
+  <div><div class="v">{{ m.completion.expected_hours }}</div><div class="l">expected hours</div></div>
+</div>
+{% if ms|length > 1 %}<h2>Completion within 150 percent, by release</h2><table style="width:auto"><tbody>{% for x in ms %}<tr><td>Release {{ x.release }}</td><td style="width:360px"><div class="bar"><span style="width:{{ x.completion.within_150_pct }}%"></span></div></td><td><b>{{ x.completion.within_150_pct }}%</b></td></tr>{% endfor %}</tbody></table>{% endif %}
+<div class="grid2">
+<div><h2>Module drop-off and time on task</h2><div class="tablewrap" style="max-height:480px"><table><thead><tr><th>Module</th><th class="num">Opened</th><th class="num">Drop-off</th><th class="num">Median min</th><th class="num">Ratio to design</th></tr></thead><tbody>
+{% for x in m.modules %}<tr><td><a href="/p/{{ p.id }}/asset/{{ x.asset }}">{{ x.module_id }}</a> <span class="muted">{{ x.title[:36] }}</span></td><td class="num">{{ x.launched }}</td><td class="num {{ 'sev-high' if x.dropoff_pct > config.THRESHOLDS.module_dropoff_pct }}">{{ x.dropoff_pct }}%</td><td class="num">{{ x.median_min }}</td><td class="num {{ 'sev-high' if x.time_ratio and x.time_ratio > config.THRESHOLDS.time_on_task_ratio_high }}">{{ x.time_ratio }}</td></tr>{% endfor %}</tbody></table></div></div>
+<div><h2>Assessments</h2><table><thead><tr><th>Assessment</th><th class="num">n</th><th class="num">Mean</th><th class="num">Pass rate</th></tr></thead><tbody>{% for a in m.assessments %}<tr><td>{{ a.asset }}</td><td class="num">{{ a.n }}</td><td class="num">{{ a.mean }}</td><td class="num">{{ a.pass_rate_pct }}%</td></tr>{% endfor %}</tbody></table>
+<h2>Tutor topics</h2><table><thead><tr><th>Topic</th><th>Module</th><th class="num">Questions</th></tr></thead><tbody>{% for t in m.tutor_clusters[:10] %}<tr><td>{{ t.topic }}</td><td>{{ t.asset }}</td><td class="num">{{ t.questions }}</td></tr>{% endfor %}</tbody></table></div>
+</div>{% endif %}
+
+{% elif tab == 'reports' %}
+<p class="lead">The eight standard reports (Technical Proposal 2.4.2). Each downloads as CSV for UMGC's tools.</p>
+{% for k, title, desc in reports %}{% set head, rows = previews[k] %}
+<div class="panel"><div class="row"><h3 style="margin:0">{{ title }}</h3><span class="muted">{{ desc }}</span><a class="btn small sec right" href="/p/{{ p.id }}/reports/{{ k }}.csv">Download CSV ({{ rows|length }} rows)</a></div>
+{% if rows %}<div class="tablewrap mt" style="max-height:220px"><table><thead><tr>{% for h in head %}<th>{{ h }}</th>{% endfor %}</tr></thead><tbody>{% for r in rows[:8] %}<tr>{% for c in r %}<td>{{ c }}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>{% else %}<p class="muted">No data yet: fills once a cohort runs on a live release.</p>{% endif %}</div>
+{% endfor %}
+
+{% elif tab == 'demographics' %}
+<p class="lead">Completion by the learner attributes UMGC defines at implementation (RFP II.4.4.1). Groups under 10 learners are suppressed. <b>The attribute values on the simulated cohort are synthetic</b>; live values come from UMGC's systems through the delivery platform.</p>
+{% if can('demographics.config') %}<form method="post" action="/p/{{ p.id }}/demographics" class="row card tint"><label for="attrs">Attributes</label><input id="attrs" name="attributes" value="{{ spec.attributes|join(', ') }}" style="flex:1"><button class="sec">Save</button></form>{% endif %}
+{% if not demo %}<div class="card tint mt">No learner data yet.</div>{% else %}
+<div class="grid2 mt">{% for d in demo %}<div class="panel"><h3>{{ d.attribute }}</h3>
+<table><thead><tr><th>Group</th><th class="num">Learners</th><th class="num">Completed</th><th class="num">Within 150%</th><th class="num">Median hours</th></tr></thead><tbody>
+{% for r in d.rows %}<tr><td>{{ r.group }}{% if r.group in d.gaps %} <span class="pill warn">gap</span>{% endif %}</td><td class="num">{{ r.n }}</td>{% if r.suppressed %}<td colspan="3" class="muted">suppressed (fewer than 10)</td>{% else %}<td class="num">{{ r.completed_pct }}%</td><td class="num">{{ r.within_150_pct }}%</td><td class="num">{{ r.median_hours }}</td>{% endif %}</tr>{% endfor %}</tbody></table>
+<p class="muted">Overall within 150 percent: {{ d.overall_150 }}%. A gap is 10 points or more below overall.</p></div>{% endfor %}</div>{% endif %}
+{% endif %}
+{% endblock %}

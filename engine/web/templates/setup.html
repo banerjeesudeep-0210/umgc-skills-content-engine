@@ -1,0 +1,76 @@
+{% extends "base.html" %}
+{% block body %}
+{% set ro = not can('program.setup') %}
+{% if tab == 'spec' %}
+<p class="lead">The Task Order and Program specification (RFP Attachment C 1 to 4). Duration in weeks and weekly learner hours size the Blueprint; the completion definition comes from them.</p>
+<form method="post" action="/p/{{ p.id }}/setup/spec">
+<fieldset {{ 'disabled' if ro }}><legend>Program length and structure</legend>
+<div class="grid4">
+  <div class="field"><label for="dw">Duration (weeks)</label><input id="dw" type="number" name="duration_weeks" min="1" max="52" value="{{ spec.program.duration_weeks }}"></div>
+  <div class="field"><label for="wh">Learner hours per week</label><input id="wh" type="number" step="0.5" name="weekly_hours" min="1" max="60" value="{{ spec.program.weekly_hours }}"></div>
+  <div class="field"><label for="cs">Courses</label><input id="cs" type="number" name="courses" min="1" max="30" value="{{ spec.program.courses }}"><div class="help">One per week by default.</div></div>
+  <div class="field"><label>Total</label><div style="font-size:20px;color:var(--purple);font-weight:600">{{ total_hours }} hours</div></div>
+  <div class="field"><label for="pm">Pass mark (percent)</label><input id="pm" type="number" name="pass_mark" value="{{ spec.program.pass_mark }}"></div>
+  <div class="field"><label for="at">Attempts allowed</label><input id="at" type="number" name="attempts" value="{{ spec.program.attempts }}"></div>
+  <div class="field"><label for="cp">Capstone</label><select id="cp" name="capstone"><option value="yes" {{ 'selected' if spec.program.capstone }}>yes</option><option value="no" {{ 'selected' if not spec.program.capstone }}>no</option></select></div>
+</div>
+<p class="note"><b>Completion definition:</b> {{ completion }}</p>
+{% if has_bp %}<p class="muted">The Blueprint exists. A new duration applies when the Blueprint is regenerated (Design Studio > Gate 2).</p>{% endif %}
+</fieldset>
+<div class="grid2">
+<fieldset {{ 'disabled' if ro }}><legend>Program</legend>
+  {% for k, l in [('subject_area','Subject area'),('occupation','Target occupation'),('lot_occupation','Lightcast LOT occupation'),('lot_specialized','LOT specialized occupation'),('credential','Industry credential'),('audience','Target audience')] %}
+  <div class="field"><label for="f-{{ k }}">{{ l }}</label><input id="f-{{ k }}" name="{{ k }}" value="{{ spec.program[k] }}" class="w100"></div>{% endfor %}
+  <div class="field"><label for="f-rm">Required Modules</label><textarea id="f-rm" name="required_modules" rows="2">{{ spec.program.required_modules }}</textarea></div>
+  <div class="field"><label for="f-ar">Assessment requirements</label><textarea id="f-ar" name="assessment_requirements" rows="2">{{ spec.program.assessment_requirements }}</textarea></div>
+  <div class="field"><label>Modality</label><div>{{ spec.program.modality }}</div></div>
+</fieldset>
+<fieldset {{ 'disabled' if ro }}><legend>Task Order</legend>
+  <div class="field"><label for="t-n">Task Order number</label><input id="t-n" name="number" value="{{ spec.task_order.number }}"></div>
+  <div class="field"><label for="t-s">Start date (kickoff)</label><input id="t-s" type="date" name="start_date" value="{{ spec.task_order.start_date }}"></div>
+  <div class="field"><label for="t-a">UMGC content approval authority</label><input id="t-a" name="approval_authority" value="{{ spec.task_order.approval_authority }}" class="w100"></div>
+  <div class="grid3">
+    <div class="field"><label for="t-r">Review window (business days)</label><input id="t-r" type="number" name="review_window_days" value="{{ spec.task_order.review_window_days }}"></div>
+    <div class="field"><label for="t-ac">Acceptance (business days)</label><input id="t-ac" type="number" name="acceptance_days" value="{{ spec.task_order.acceptance_days }}"></div>
+    <div class="field"><label for="t-m">Recurring support (months)</label><input id="t-m" type="number" name="recurring_months" value="{{ spec.task_order.recurring_months }}"></div>
+  </div>
+  <div class="field"><label for="t-sme">SME model</label><input id="t-sme" name="sme_model" value="{{ spec.task_order.sme_model }}" class="w100"><div class="help">Per UMGC, SMEs are a vendor (Magic) responsibility.</div></div>
+  <div class="field"><label for="t-b">Background</label><textarea id="t-b" name="background" rows="3">{{ spec.task_order.background }}</textarea></div>
+  <div class="field"><label for="t-at">Learner attributes for demographic reporting</label><input id="t-at" name="attributes" value="{{ spec.attributes|join(', ') }}" class="w100"><div class="help">UMGC defines these at implementation (RFP II.4.4.1).</div></div>
+</fieldset>
+</div>
+{% if not ro %}<button>Save specification</button>{% else %}<p class="muted">Read only for your role. A Magic Project Manager or Learning Experience Architect edits the specification.</p>{% endif %}
+</form>
+<p class="mt"><a class="btn sec" href="/p/{{ p.id }}/doc/pmp">Project Management Plan (6.1.1)</a></p>
+
+{% elif tab == 'team' %}
+<p class="lead">The Program team. Subject matter experts are provided by Magic (UMGC Q&A); their credentials go into the Attachment D packet. Link a person to their account so assignments and mentions reach them.</p>
+<form method="post" action="/p/{{ p.id }}/setup/team">
+<div class="tablewrap"><table><thead><tr><th>Name</th><th>Role</th><th>Account</th><th>Expertise</th><th>Degree and industry credentials</th><th>Years of practice</th><th>Courses</th><th>Location</th><th>Remove</th></tr></thead><tbody>
+{% set rows = team.members + [{}, {}, {}] %}
+{% for m in rows %}{% set i = loop.index0 %}<tr>
+<td><label class="sr-only" for="m{{i}}n">Name</label><input id="m{{i}}n" name="m{{i}}_name" value="{{ m.name }}" style="width:200px"></td>
+<td><label class="sr-only" for="m{{i}}r">Role</label><select id="m{{i}}r" name="m{{i}}_role">{% for r in ROLES[1:] %}<option {{ 'selected' if r == m.role or (not m.role and r == 'Magic SME (vendor-provided)') }}>{{ r }}</option>{% endfor %}</select></td>
+<td><label class="sr-only" for="m{{i}}u">Account</label><select id="m{{i}}u" name="m{{i}}_username"><option value="">none</option>{% for u in users %}<option value="{{ u.username }}" {{ 'selected' if u.username == m.username }}>{{ u.name }}</option>{% endfor %}</select></td>
+<td><label class="sr-only" for="m{{i}}e">Expertise</label><input id="m{{i}}e" name="m{{i}}_expertise" value="{{ m.expertise }}"></td>
+<td><label class="sr-only" for="m{{i}}c">Credentials</label><input id="m{{i}}c" name="m{{i}}_credentials" value="{{ m.credentials }}"></td>
+<td><label class="sr-only" for="m{{i}}y">Years</label><input id="m{{i}}y" name="m{{i}}_years" value="{{ m.years }}" style="width:70px"></td>
+<td><label class="sr-only" for="m{{i}}k">Courses</label><input id="m{{i}}k" name="m{{i}}_courses" value="{{ (m.courses or [])|join(', ') }}" style="width:150px"></td>
+<td><label class="sr-only" for="m{{i}}l">Location</label><input id="m{{i}}l" name="m{{i}}_location" value="{{ m.location }}" style="width:110px"></td>
+<td>{% if m.name %}<input type="checkbox" name="m{{i}}_remove" aria-label="Remove {{ m.name }}">{% endif %}</td></tr>{% endfor %}
+</tbody></table></div>
+<p class="muted">{{ team.note }}</p>
+{% if can('team.edit') %}<button>Save team</button>{% endif %}
+</form>
+
+{% elif tab == 'schedule' %}
+<p class="lead">Milestones from RFP Attachment C 7, dated from the kickoff. Set a date by hand to override. Deliverables and their acceptance are tracked in Quality and Release.</p>
+<form method="post" action="/p/{{ p.id }}/setup/schedule">
+<table><thead><tr><th>Code</th><th>Milestone</th><th>Week</th><th>Due</th><th>Override</th></tr></thead><tbody>
+{% for m in ms %}<tr><td>{{ m.code }}</td><td>{{ m.name }}</td><td>{{ m.week }}</td><td>{{ m.due }}</td><td><label class="sr-only" for="ms{{ m.code }}">Override date for {{ m.name }}</label><input id="ms{{ m.code }}" type="date" name="ms_{{ m.code }}" value="{{ overrides.get(m.code, '') }}" {{ 'disabled' if ro }}></td></tr>{% endfor %}</tbody></table>
+<div class="row mt">{% if not ro %}<button>Save schedule</button>{% endif %}<a class="btn sec" href="/p/{{ p.id }}/setup/milestones.csv">Export for Smartsheet (CSV)</a><a class="btn sec" href="/p/{{ p.id }}/doc/schedule">Implementation Schedule (6.1.3)</a></div>
+</form>
+<h2>Deliverables by milestone</h2>
+<table><thead><tr><th>Code</th><th>Deliverable</th><th>Due</th><th>Status</th></tr></thead><tbody>{% for d in dels %}<tr><td>{{ d.code }}</td><td>{{ d.name }}</td><td>{{ d.due }}</td><td><span class="pill {{ 'ok' if d.accepted else '' }}">{{ d.status }}</span></td></tr>{% endfor %}</tbody></table>
+{% endif %}
+{% endblock %}

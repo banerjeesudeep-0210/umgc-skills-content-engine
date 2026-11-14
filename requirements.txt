@@ -10,3 +10,4 @@ openpyxl>=3.1
 pypdf>=4.0
 python-docx>=1.1
 python-pptx>=0.6.23
+pycrdt>=0.12,<0.15

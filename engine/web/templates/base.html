@@ -3,108 +3,83 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>{% block title %}UMGC Skills Content Engine{% endblock %}</title>
+<title>{% block title %}{% if p %}{{ p.name }} | {% endif %}UMGC Skills Content Engine{% endblock %}</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
-<style>
-:root{--purple:#4404BF;--deep:#3E0AB7;--ink:#24085F;--p900:#24085F;--p700:#3E0AB7;--p500:#7D5BD9;--p300:#B9A6EF;--lav:#D2C1FF;--p100:#EFE8FF;--p50:#F8F5FF;--rule:#E3DAFB;--body:#1A1A1A;--muted:#5E5280;--ok:#4404BF;--warn:#3E0AB7;--bad:#24085F;--lime:#D2C1FF;--cyan:#F8F5FF}
-*{box-sizing:border-box}
-body{margin:0;font-family:Poppins,system-ui,sans-serif;color:var(--body);background:#fff;font-size:14px;line-height:1.5}
-a{color:var(--purple);text-decoration:none}a:hover{text-decoration:underline}
-header.top{display:flex;align-items:center;gap:18px;padding:12px 28px;border-bottom:1px solid var(--rule)}
-header.top .brand{font-weight:600;color:var(--purple);font-size:17px}
-header.top .brand small{display:block;font-weight:400;color:var(--muted);font-size:11px}
-header.top nav{margin-left:auto;display:flex;gap:16px;font-size:13px}
-.whoami select,.whoami input{font-size:12px;padding:4px 6px}.whoami button{font-size:12px;padding:4px 10px}
-.modes{font-size:11px;color:var(--muted)}
-.pill{display:inline-block;padding:1px 9px;border-radius:999px;font-size:11px;font-weight:500;background:var(--rule);color:var(--body);white-space:nowrap}
-.pill.live{background:var(--purple);color:#fff}.pill.mock{background:var(--lav)}.pill.ok{background:var(--purple);color:#fff}.pill.warn{background:var(--lav);color:var(--p900);font-weight:600}.pill.bad{background:var(--p900);color:#fff}.pill.p{background:var(--purple);color:#fff}
-main{padding:22px 28px 90px;max-width:1400px;margin:0 auto}
-h1{font-weight:400;color:var(--purple);font-size:28px;margin:4px 0 6px}
-h2{font-weight:500;color:var(--purple);font-size:19px;margin:26px 0 10px}
-h3{font-size:15px;font-weight:600;margin:16px 0 6px}
-.kicker{font-weight:600;color:var(--body);font-size:13px;margin:0 0 14px}
-.muted{color:var(--muted);font-size:12px}
-.pnav{display:flex;flex-wrap:wrap;gap:4px;margin:10px 0 18px;border-bottom:1px solid var(--rule)}
-.pnav a{padding:8px 12px;font-size:13px;color:var(--body);border-bottom:3px solid transparent}
-.pnav a.on{border-color:var(--purple);color:var(--purple);font-weight:600}
-.badge{background:var(--purple);color:#fff;border-radius:999px;padding:0 7px;font-size:10px;margin-left:4px}
-table{border-collapse:collapse;width:100%;font-size:12.5px}
-th{background:var(--lav);text-align:left;padding:7px 8px;font-weight:600;position:sticky;top:0}
-td{padding:6px 8px;border-bottom:1px solid var(--rule);vertical-align:top}
-tr:hover td{background:var(--p50)}
-.grid{display:grid;gap:14px}.g2{grid-template-columns:repeat(2,1fr)}.g3{grid-template-columns:repeat(3,1fr)}.g4{grid-template-columns:repeat(4,1fr)}
-@media(max-width:900px){.g2,.g3,.g4{grid-template-columns:1fr}}
-.card{padding:14px 16px;border-radius:2px}
-.c0{background:var(--p50);border:1px solid var(--rule)}.c1{background:var(--p100)}.c2{background:var(--lav)}.cw{border:1px solid var(--rule)}
-.stat{font-size:28px;font-weight:700;color:var(--purple);line-height:1.1}
-.band{background:var(--purple);color:#fff;padding:14px 18px;display:flex;gap:28px;flex-wrap:wrap}
-.band .v{font-size:24px;font-weight:700}.band .l{font-size:11px;opacity:.85}
-.flash{padding:10px 14px;background:var(--p100);border-left:4px solid var(--purple);margin-bottom:12px}.error{padding:10px 14px;background:var(--lav);border-left:4px solid var(--p900);color:var(--p900);font-weight:600;margin-bottom:12px}
-button,.btn{font-family:inherit;font-size:13px;border:0;background:var(--purple);color:#fff;padding:7px 14px;cursor:pointer;border-radius:2px;display:inline-block}
-button.sec,.btn.sec{background:#fff;color:var(--purple);border:1px solid var(--purple)}
-button.warn{background:var(--p900)}
-input,select,textarea{font-family:inherit;font-size:13px;padding:6px 8px;border:1px solid var(--p300);border-radius:2px}
-textarea{width:100%}
-form.inline{display:inline-flex;gap:6px;align-items:center;flex-wrap:wrap}
-.lanes{display:grid;grid-template-columns:150px repeat(8,1fr);gap:2px;font-size:11.5px}
-.lanes .lh{background:var(--ink);color:#fff;padding:8px;font-weight:600}
-.lanes .sh{padding:8px;font-weight:600;background:var(--rule)}
-.lanes .sh.done{background:var(--lav)}.lanes .sh.cur{background:var(--purple);color:#fff}
-.lanes .cell{padding:6px 8px;background:var(--p50);min-height:44px}
-.lanes .cell.cur{background:#efe8ff}
-.bar{height:10px;background:var(--rule);position:relative}.bar>span{position:absolute;left:0;top:0;bottom:0;background:var(--purple)}
-.bar.lime>span{background:var(--p900)}
-.kv{display:grid;grid-template-columns:200px 1fr;gap:4px 12px;font-size:13px}.kv div:nth-child(odd){color:var(--muted)}
-pre{background:var(--p50);padding:10px;font-size:12px;overflow:auto;white-space:pre-wrap}
-footer.footbar{position:fixed;left:0;right:0;bottom:0;height:38px;background:var(--ink);color:#fff;display:flex;align-items:center;justify-content:space-between;padding:0 28px;font-size:12px;z-index:5}
-footer.footbar b{font-weight:600}
-.sev-critical,.sev-high{color:var(--p900);font-weight:700;text-transform:uppercase;font-size:11px;letter-spacing:.3px}.sev-moderate{color:var(--purple);font-weight:600}.sev-low{color:var(--muted)}
-details summary{cursor:pointer;color:var(--purple);font-weight:500}
-.screen{border-left:3px solid var(--lav);padding:4px 12px;margin:10px 0}
-.cite{font-size:10px;background:var(--lav);padding:0 5px;margin-left:4px}
-</style>
+<link rel="stylesheet" href="/static/app.css">
 {% block head %}{% endblock %}
 </head>
 <body>
-<header class="top">
-  <div class="brand">UMGC Skills Content Engine<small>Powered by Magic AI POD and Magic's AI-enabled learning platform</small></div>
-  <span class="modes">Lightcast <span class="pill {{ 'live' if config.LIGHTCAST_LIVE else 'mock' }}">{{ 'live' if config.LIGHTCAST_LIVE else 'mock' }}</span>
-  Claude <span class="pill {{ 'live' if config.LLM_LIVE else 'mock' }}">{{ 'live' if config.LLM_LIVE else 'mock' }}</span></span>
-  <nav><a href="/">Programs</a><a href="/inbox">My inbox</a><a href="/jobs">Queue</a><a href="/how">How it works</a></nav>
-  <form method="post" action="/whoami" class="inline whoami" title="Your name and role are recorded on every save, comment and gate decision">
-    <input type="hidden" name="back" value="{{ request.url.path }}">
-    <input name="name" value="{{ me.name }}" placeholder="Your name" style="width:130px">
-    <select name="role">{% for r in ROLES %}<option {{ 'selected' if r == me.role }}>{{ r }}</option>{% endfor %}</select>
-    <button class="sec">{{ 'Switch' if me.name else 'Sign in' }}</button></form>
-</header>
-<main>
-{% if flash %}<div class="flash">{{ flash }}</div>{% endif %}
-{% if err %}<div class="error">{{ err }}</div>{% endif %}
-{% if p %}
-  <div class="muted">Program {{ p.id }} | release {{ p.release_version or 'not yet launched' }}</div>
-  <h1>{{ p.name }}</h1>
-  <div class="kicker">Stage: {{ dict(STAGES)[p.stage] if p.stage in dict(STAGES) else p.stage }} <span class="pill {{ 'warn' if 'await' in p.status else ('ok' if 'live' in p.status else 'p') }}">{{ p.status }}</span>
-   {% if jobs_open %}<span class="pill">{{ jobs_open }} job(s) in the queue</span>{% endif %}
-   {% if jobs_failed %}<a class="pill bad" href="/jobs?program={{ p.id }}">{{ jobs_failed }} failed</a>{% endif %}</div>
-  {% set here = request.url.path %}
-  <div class="pnav">
-    <a href="/p/{{p.id}}" class="{{ 'on' if here.endswith('/p/' ~ p.id) }}">Workflow{% if pending_umgc %}<span class="badge">{{pending_umgc}}</span>{% endif %}</a>
-    <a href="/p/{{p.id}}/studio" class="{{ 'on' if '/studio' in here or '/sources/' in here }}">Authoring and collaboration</a>
-    <a href="/p/{{p.id}}/skills" class="{{ 'on' if 'skills' in here }}">1 Skills map</a>
-    <a href="/p/{{p.id}}/blueprint" class="{{ 'on' if 'blueprint' in here }}">2 Blueprint</a>
-    <a href="/p/{{p.id}}/build" class="{{ 'on' if '/build' in here or '/asset/' in here }}">3 Build and gates{% if pending_gates - pending_umgc > 0 %}<span class="badge">{{ pending_gates - pending_umgc }}</span>{% endif %}</a>
-    <a href="/p/{{p.id}}/quality" class="{{ 'on' if 'quality' in here }}">4 Quality</a>
-    <a href="/p/{{p.id}}/release" class="{{ 'on' if 'release' in here }}">5 Releases</a>
-    <a href="/p/{{p.id}}/learn" class="{{ 'on' if 'learn' in here }}">6 Learn</a>
-    <a href="/p/{{p.id}}/measure" class="{{ 'on' if 'measure' in here }}">7 Measure</a>
-    <a href="/p/{{p.id}}/improve" class="{{ 'on' if 'improve' in here }}">8 Improve{% if tickets_open %}<span class="badge">{{tickets_open}}</span>{% endif %}</a>
-    <a href="/p/{{p.id}}/trace" class="{{ 'on' if 'trace' in here }}">Trace explorer</a>
-    <a href="/p/{{p.id}}/api" class="{{ 'on' if '/api' in here }}">API calls</a>
+<a class="skip" href="#main">Skip to main content</a>
+<div class="shell">
+<aside class="side" aria-label="Navigation">
+  <a class="brand" href="/"><span class="mark" aria-hidden="true">M</span><span>Skills Content Engine<small>UMGC RFP 92303 | Magic AI POD</small></span></a>
+  <nav aria-label="Workspace" class="nav">
+    <div class="navhead">Workspace</div>
+    <a href="/" {% if section == 'programs' %}aria-current="page"{% endif %}>Programs</a>
+    <a href="/work" {% if section == 'work' %}aria-current="page"{% endif %}>My work</a>
+    <a href="/governance" {% if section == 'governance' %}aria-current="page"{% endif %}>AI governance</a>
+    {% if can('users.manage') %}<a href="/admin" {% if section == 'admin' %}aria-current="page"{% endif %}>Admin</a>{% endif %}
+  </nav>
+  {% if p %}
+  <nav aria-label="Program" class="nav prog">
+    <div class="navhead">Program</div>
+    <a class="pname" href="/p/{{ p.id }}">{{ p.name }}</a>
+    {% for key, label, path, n in sections %}
+      {% set done = n and (stage_idx + 1 > n or p.release_version and n <= 5) %}
+      {% set cur = n and (stage_idx + 1 == n or (n == 4 and stage_idx == 4)) and not (p.release_version and n <= 5) %}
+      <a href="/p/{{ p.id }}{{ path }}" {% if section == key %}aria-current="page"{% endif %} class="{{ 'done' if done }} {{ 'cur' if cur }}">
+        <span class="step" aria-hidden="true">{{ n if n else '' }}</span><span class="lbl">{{ label }}</span>
+        {% if key == 'overview' and pending_umgc %}<span class="badge" aria-label="{{ pending_umgc }} UMGC decisions waiting">{{ pending_umgc }}</span>{% endif %}
+        {% if key == 'develop' and pending_val %}<span class="badge" aria-label="{{ pending_val }} validation decisions waiting">{{ pending_val }}</span>{% endif %}
+        {% if key == 'improve' and tickets_open %}<span class="badge" aria-label="{{ tickets_open }} tickets waiting">{{ tickets_open }}</span>{% endif %}
+      </a>
+    {% endfor %}
+  </nav>
+  {% endif %}
+  <div class="sidefoot">
+    <span>Lightcast <b>{{ 'live' if config.LIGHTCAST_LIVE else 'mock' }}</b></span>
+    <span>Claude <b>{{ 'live' if config.LLM_LIVE else 'mock' }}</b></span>
   </div>
-{% endif %}
-{% block body %}{% endblock %}
-</main>
-<footer class="footbar"><span>www.magicedtech.com</span><span>UMGC RFP 92303 | Skills Content Engine</span><b>Magic / EdTech</b></footer>
+</aside>
+<div class="body">
+  <header class="topbar">
+    <div class="crumbs">{% block crumbs %}{% if p %}<a href="/">Programs</a> <span aria-hidden="true">/</span> <a href="/p/{{ p.id }}">{{ p.name }}</a>{% for key, label, path, n in sections %}{% if key == section and key != 'overview' %} <span aria-hidden="true">/</span> {{ label }}{% endif %}{% endfor %}{% endif %}{% endblock %}</div>
+    {% if user %}
+    <div class="me">
+      <span class="avatar" aria-hidden="true">{{ (user.name.split()|map('first')|join(''))[:2]|upper }}</span>
+      <span><b>{{ user.name }}</b><small>{{ user.role }}</small></span>
+      <a href="/account">Account</a><a href="/logout">Sign out</a>
+    </div>
+    {% endif %}
+  </header>
+  <main id="main" tabindex="-1">
+    {% if flash %}<div class="flash" role="status">{{ flash }}</div>{% endif %}
+    {% if err %}<div class="error" role="alert">{{ err }}</div>{% endif %}
+    {% if p %}
+      <div class="phead">
+        <div>
+          <div class="eyebrow">Program {{ p.id }} | {{ dict(STAGES)[p.stage] if p.stage in dict(STAGES) else p.stage }} | <span class="pill {{ 'warn' if 'await' in p.status else ('ok' if 'live' in p.status else '') }}">{{ p.status }}</span>{% if p.release_version %} | release {{ p.release_version }}{% endif %}{% if jobs_open %} | <span class="pill">{{ jobs_open }} job(s) running</span>{% endif %}{% if jobs_failed %} | <a class="pill bad" href="/p/{{ p.id }}/audit?tab=activity">{{ jobs_failed }} failed</a>{% endif %}</div>
+          <h1>{% block h1 %}{% for key, label, path, n in sections %}{% if key == section %}{{ label }}{% endif %}{% endfor %}{% endblock %}</h1>
+        </div>
+      </div>
+      {% if nxt and nxt.text != 'Nothing waiting.' %}
+      <div class="next {{ 'yours' if nxt.yours }}" role="region" aria-label="Next step">
+        <span class="nlabel">{{ 'Your next step' if nxt.yours else 'Next step' }}</span>
+        <span class="ntext">{{ nxt.text }}{% if nxt.owner %} <span class="muted">Owner: {{ nxt.owner }}</span>{% endif %}</span>
+        {% if nxt.href %}<a class="btn small" href="/p/{{ p.id }}{{ nxt.href }}">{{ 'Open' if nxt.yours else 'View' }}</a>{% endif %}
+      </div>
+      {% endif %}
+      {% if tabs %}
+      <nav class="tabs" aria-label="{% for key, label, path, n in sections %}{% if key == section %}{{ label }}{% endif %}{% endfor %} pages">
+        {% for k, l in tabs %}<a href="?tab={{ k }}" {% if tab == k %}aria-current="page"{% endif %}>{{ l }}</a>{% endfor %}
+      </nav>
+      {% endif %}
+    {% endif %}
+    {% block body %}{% endblock %}
+  </main>
+</div>
+</div>
+{% block scripts %}{% endblock %}
 </body>
 </html>

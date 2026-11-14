@@ -9,6 +9,7 @@ from __future__ import annotations
 import datetime as dt
 import hashlib
 import json
+import re
 
 from ..clients import llm
 from ..db import locked, Program, get_record, log, put_record, session
@@ -74,7 +75,10 @@ def run(program_id: int, payload: dict):
         bp = get_record(s, program_id, "blueprint").data
         rec = get_record(s, program_id, "asset", key)
         a = dict(rec.data)
+        ol = get_record(s, program_id, "outline")
     rev = a["revision"]
+    if ol and a["asset_type"] == "module":
+        a["_outline"] = next((r for r in ol.data.get("rows", []) if r["module_id"] == a["ref_id"]), None)
     skills = {sk["skill_id"]: sk for sk in sm["skills"]}
     objectives = {o["objective_id"]: o for o in bp["objectives"]}
     comps = {c["competency_id"]: c for c in sm["competencies"]}
@@ -139,8 +143,40 @@ def _mock_module(a, brief, skills, objectives, comps, rev, feedback):
                  "skill_id": sk["skill_id"], "feedback": "Compare your answer with the model response in the AI Study Assistant panel."}
                 for sk in sks]
     summary = "Key ideas: " + ", ".join(sk["name"] for sk in sks) + "."
+    reading = []
+    ol = a.get("_outline")
+    if ol:  # follow the approved Module outline: its screen plan, offline reading and practice
+        by_head = {sc["heading"]: sc for sc in screens}
+        planned = []
+        for h in [x.strip() for x in str(ol.get("screens") or "").splitlines() if x.strip()]:
+            if h.lower() == "summary":
+                continue
+            sk = next((k for k in sks if h.startswith(k["name"]) or k["name"] in h), None)
+            if h == "What you will be able to do":
+                planned.append(screens[0])
+            elif sk and h.lower().startswith("on the job"):
+                src = by_head.get(f"At {org}: {sk['name']} on the job")
+                planned.append({**src, "heading": h} if src else {"heading": h, "blocks": [_cite(f"At {org}, {sk['statement'].lower()}.")], "media": None})
+            elif sk:
+                src = by_head.get(sk["name"])
+                planned.append({**src, "heading": h} if src else {"heading": h, "blocks": [_cite(sk["statement"] + ".")], "media": None})
+            elif h.lower() == "worked example":
+                planned.append({"heading": h, "blocks": [_cite("Here is the task done step by step before you try it: read the evidence, name the skill you are "
+                                                              "applying, record what you found, and state the next action.")], "media": None})
+            elif h.lower().startswith("check your understanding"):
+                planned.append({"heading": h, "blocks": [_cite("Answer three quick questions before the practice: " +
+                                                              "; ".join(f"what does {k['name']} help you do?" for k in sks[:3]) + ".", "SRC-EXAM")], "media": None})
+            else:
+                planned.append({"heading": h, "blocks": [_cite(f"{h}: " + " ".join(k["statement"] + "." for k in sks[:2]))], "media": None})
+        if planned:
+            screens = planned
+        lines = [x.strip() for x in str(ol.get("practice") or "").splitlines() if x.strip()]
+        if lines:
+            practice = [{"prompt": "Try it: " + re.sub(r"^S\d+\.\d+:\s*", "", ln), "skill_id": (re.match(r"(S\d+\.\d+)", ln) or [None, ""])[1] if re.match(r"(S\d+\.\d+)", ln) else "",
+                         "feedback": "Compare your answer with the model response in the AI Study Assistant panel."} for ln in lines]
+        reading = [x.strip() for x in str(ol.get("reading") or "").splitlines() if x.strip()]
     return {"title": a["title"], "module_type": a["type"], "scenario_org": org, "screens": screens, "practice": practice,
-            "summary": summary, "estimated_minutes": 30 + 15 * len(sks)}
+            "summary": summary, "reading": reading, "estimated_minutes": (float(ol.get("online_min") or 0) if ol else 0) or 30 + 15 * len(sks)}
 
 
 def _mock_assessment(a, brief, skills, objectives, comps, rev, feedback):
@@ -198,10 +234,16 @@ def _llm_draft(program_id, a, brief, skills, objectives, feedback):
             "objectives": [objectives[o]["statement"] for o in a["objective_ids"] if o in objectives],
             "skills": [{"id": s["skill_id"], "lightcast_name": s["name"], "statement": s["statement"]} for s in sks],
             "reviewer_feedback_to_apply": [f["note"] for f in feedback]}
+    if a.get("_outline"):
+        ol = a["_outline"]
+        spec.update({"approved_outline": {"screens_in_order": [x for x in str(ol.get("screens") or "").splitlines() if x.strip()],
+                                          "objective_verbs": ol.get("objective_verbs"), "offline_reading": [x for x in str(ol.get("reading") or "").splitlines() if x.strip()],
+                                          "practice": [x for x in str(ol.get("practice") or "").splitlines() if x.strip()], "online_minutes": ol.get("online_min")}})
     if a["asset_type"] == "module":
         shape = ('{"title":"","module_type":"","scenario_org":"","screens":[{"heading":"","blocks":[{"text":"","citations":["SRC-EXAM"]}],'
-                 '"media":{"type":"diagram","alt":""}}],"practice":[{"prompt":"","skill_id":"","feedback":""}],"summary":"","estimated_minutes":45}')
-        ask = "Write the Module. Use each skill's Lightcast name verbatim at least once. Every media element needs alt text."
+                 '"media":{"type":"diagram","alt":""}}],"practice":[{"prompt":"","skill_id":"","feedback":""}],"summary":"","reading":[""],"estimated_minutes":45}')
+        ask = ("Write the Module. Follow approved_outline when present: one screen per planned screen, in order, at the objective verbs' level; "
+               "include the offline reading list in 'reading'. Use each skill's Lightcast name verbatim at least once. Every media element needs alt text.")
     elif a["type"] in ("knowledge check", "practice exam"):
         shape = ('{"title":"","kind":"items","items":[{"item_id":"","stem":"","options":[{"id":"A","text":"","correct":true,"rationale":""}],'
                  '"key":"A","skill_id":"","objective_id":""}],"passing":"","note":""}')

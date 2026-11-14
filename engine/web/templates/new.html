@@ -1,20 +1,47 @@
 {% extends "base.html" %}
 {% block body %}
 <h1>New Program</h1>
-<p class="kicker">The skills worker names the occupation in the Lightcast Occupation Taxonomy, extracts Lightcast skills from every source item with trace spans, and drafts the skills map for SME, employer and UMGC review.</p>
-<form method="post" action="/programs/new" class="grid g2">
-  <div><h3>Program</h3>
-    <p><label>Program name<br><input name="name" required style="width:100%" placeholder="AI Adoption for Operations Teams"></label></p>
-    <p><label>Target occupation (job title)<br><input name="occupation" required style="width:100%" placeholder="Operations Analyst"></label></p>
-    <p><label>Lightcast LOT occupation name (optional)<br><input name="lot" style="width:100%"></label></p>
-    <p><label>Lightcast LOT specialized occupation (optional)<br><input name="specialized" style="width:100%"></label></p>
-    <p><label>Aligned credential (optional)<br><input name="credential" style="width:100%"></label></p>
+<p class="lead">Enter what the Task Order specifies (RFP Attachment C 4). Duration and weekly hours size the Blueprint: by default one Course per week. Everything here can be changed later in Setup.</p>
+<form method="post" action="/programs/new">
+<div class="grid2">
+<fieldset><legend>Task Order</legend>
+  <div class="field"><label for="name">Program name</label><input id="name" name="name" class="w100" required placeholder="e.g. Cybersecurity Operations Foundations"></div>
+  <div class="field"><label for="to">Task Order number</label><input id="to" name="task_order" class="w100" placeholder="e.g. 92303-2"></div>
+  <div class="field"><label for="sa">Subject area</label><input id="sa" name="subject_area" class="w100" placeholder="e.g. Cybersecurity"></div>
+  <div class="field"><label for="sd">Start date (kickoff)</label><input id="sd" type="date" name="start_date"><div class="help">Milestones are scheduled from this date (Weeks 1, 2, 5, 8, 10, 12).</div></div>
+  <div class="field"><label for="au">Target audience</label><input id="au" name="audience" class="w100" value="Working adult learners, including military-affiliated learners"></div>
+</fieldset>
+<fieldset><legend>Length and structure</legend>
+  <div class="grid3">
+    <div class="field"><label for="dw">Duration (weeks)</label><input id="dw" type="number" name="duration_weeks" min="1" max="52" value="8" required></div>
+    <div class="field"><label for="wh">Learner hours per week</label><input id="wh" type="number" name="weekly_hours" min="1" max="60" step="0.5" value="22.5" required></div>
+    <div class="field"><label for="cs">Courses</label><input id="cs" type="number" name="courses" min="1" max="30" value="8"><div class="help">Defaults to one per week.</div></div>
   </div>
-  <div><h3>Source pack (the only material the AI may draw on)</h3>
-    <p><input name="src1_title" value="Credential exam objectives" style="width:100%"><textarea name="src1" rows="6" placeholder="Paste the published exam objectives or the framework"></textarea></p>
-    <p><input name="src2_title" value="UMGC program outcomes" style="width:100%"><textarea name="src2" rows="4" placeholder="Paste UMGC course or program outcomes"></textarea></p>
-    <p><input name="src3_title" value="Job posting sample" style="width:100%"><textarea name="src3" rows="4" placeholder="Optional: posting text for the target occupation"></textarea></p>
+  <p class="muted" id="hours">Total: 180 learner hours.</p>
+  <div class="field"><label for="rm">Required Modules (if the Task Order names any)</label><textarea id="rm" name="required_modules" rows="2"></textarea></div>
+  <div class="field"><label for="ar">Assessment requirements</label><textarea id="ar" name="assessment_requirements" rows="2" placeholder="e.g. practice exam aligned to the credential; one capstone"></textarea></div>
+</fieldset>
+</div>
+<fieldset><legend>Occupation and credential (Lightcast)</legend>
+  <div class="grid4">
+    <div class="field"><label for="oc">Target occupation (job title)</label><input id="oc" name="occupation" class="w100" required value="{{ sample.occupation.title }}"></div>
+    <div class="field"><label for="lot">Lightcast LOT occupation</label><input id="lot" name="lot" class="w100" value="{{ sample.occupation.lot_occupation_name }}"><div class="help">Normalized through the Lightcast Titles API.</div></div>
+    <div class="field"><label for="sp">LOT specialized occupation</label><input id="sp" name="specialized" class="w100" value="{{ sample.occupation.lot_specialized_occupation_name }}"></div>
+    <div class="field"><label for="cr">Industry credential</label><input id="cr" name="credential" class="w100" value="{{ sample.credential }}"></div>
   </div>
-  <div><button>Create Program and start Stage 1</button></div>
+</fieldset>
+<fieldset><legend>Starter sources (optional)</legend>
+  <p class="muted">Paste text now or upload files after creating the Program (Skills Studio > Sources). Lightcast extracts skills from every source; SMEs approve sources before AI drafting uses them.</p>
+  <div class="grid3">{% for i, t in [(1, 'Credential exam objectives'), (2, 'UMGC program outcomes'), (3, 'Job posting sample')] %}
+    <div class="field"><label for="s{{ i }}t">Title</label><input id="s{{ i }}t" name="src{{ i }}_title" value="{{ t }}" class="w100">
+    <label for="s{{ i }}" class="sr-only">{{ t }} text</label><textarea id="s{{ i }}" name="src{{ i }}" rows="6" style="margin-top:6px"></textarea></div>{% endfor %}</div>
+</fieldset>
+<button>Create Program</button> <a class="btn sec" href="/">Cancel</a>
 </form>
 {% endblock %}
+{% block scripts %}<script>
+const dw=document.getElementById('dw'),wh=document.getElementById('wh'),cs=document.getElementById('cs'),h=document.getElementById('hours');let touched=false;
+cs.addEventListener('input',()=>touched=true);
+function upd(){h.textContent='Total: '+(Number(dw.value||0)*Number(wh.value||0))+' learner hours over '+dw.value+' weeks.';if(!touched)cs.value=dw.value}
+dw.addEventListener('input',upd);wh.addEventListener('input',upd);upd();
+</script>{% endblock %}

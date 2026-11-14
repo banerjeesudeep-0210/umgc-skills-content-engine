@@ -1,27 +1,40 @@
 {% extends "base.html" %}
+{% from "_doc.html" import render %}
 {% block body %}
-<p class="kicker">Three triggers: periodic (quarterly Lightcast refresh), event-triggered (a person reports a change), and data-informed (the default for live Programs). AI does the watching and the first draft. People decide. Approved changes re-enter Build and pass all five gates.</p>
-<div class="grid g3">
-<div class="card c0"><h3>Periodic: quarterly Lightcast refresh</h3><p>Re-verifies every Lightcast skill ID, stamps the taxonomy version, re-pulls demand and raises tickets for shifts over 25 percent. Runs on the Render cron; you can run it now.</p>
-<form method="post" action="/p/{{p.id}}/refresh"><button>Run Lightcast refresh now</button></form>
-{% if refresh %}<p class="muted">Last: {{ refresh.quarter }}, {{ refresh.ids_verified }} IDs verified, {{ refresh.demand_shifts }} demand shifts.</p>{% endif %}</div>
-<div class="card c1"><h3>Event-triggered</h3><form method="post" action="/p/{{p.id}}/event">
-<p><input name="title" placeholder="Event, for example: Security+ SY0-801 objective update" style="width:100%" required></p>
-<p><textarea name="detail" rows="2" placeholder="What changed"></textarea></p>
-<p><select name="target"><option value="">Program-wide</option>{% for a in assets %}<option>{{ a }}</option>{% endfor %}</select>
-<select name="change_class"><option value="material">material</option><option value="routine">routine</option></select> <button>Raise ticket</button></p></form></div>
-<div class="card c2"><h3>Data-informed thresholds</h3><div class="kv">{% for k, v in config.THRESHOLDS.items() %}<div>{{ k.replace('_',' ') }}</div><div>{{ v }}</div>{% endfor %}</div></div>
-</div>
-<h2>Tickets</h2>
-<table><tr><th>Ticket</th><th>Trigger</th><th>Signal</th><th>Target</th><th>AI-proposed response</th><th>Class</th><th>Status</th><th>Decision</th></tr>
-{% for t in tickets|reverse %}<tr><td>{{ t.ticket_id }}<div class="muted">rel {{ t.release }}</div></td><td>{{ t.trigger }}</td><td><b>{{ t.signal }}</b><div class="muted">{{ t.detail }}</div><div class="muted">Suggests: {{ t.suggests }}</div></td>
-<td>{% if t.target_asset %}<a href="/p/{{p.id}}/asset/{{ t.target_asset }}">{{ t.target_asset }}</a>{% endif %}</td><td style="min-width:240px">{{ t.ai_proposed_response }}</td><td>{{ t.change_class }}</td>
+{% if tab == 'tickets' %}
+<p class="lead">Three triggers: periodic (quarterly Lightcast refresh), event-triggered (a person reports a change) and data-informed (thresholds on live data). AI drafts the proposal; people decide. Routine changes run under standing approval; material changes need a UMGC approver (Technical Proposal 2.2.3.2).</p>
+<table><thead><tr><th>Ticket</th><th>Trigger</th><th>Signal</th><th>Target</th><th>Proposed response</th><th>Class</th><th>Status</th><th>Decision</th></tr></thead><tbody>
+{% for t in tickets|reverse %}<tr><td>{{ t.ticket_id }}<div class="muted">rel {{ t.release }}</div></td><td>{{ t.trigger }}</td><td><b>{{ t.signal }}</b><div class="muted">{{ t.detail }}</div></td>
+<td>{% if t.target_asset %}<a href="/p/{{ p.id }}/asset/{{ t.target_asset }}">{{ t.target_asset }}</a>{% else %}Program{% endif %}</td><td style="min-width:220px">{{ t.ai_proposed_response }}</td><td>{{ t.change_class }}</td>
 <td><span class="pill {{ 'warn' if t.status=='proposed' else ('ok' if 'released' in t.status else '') }}">{{ t.status }}</span></td>
-<td>{% if t.status == 'proposed' %}<form method="post" action="/p/{{p.id}}/ticket" style="min-width:230px"><input type="hidden" name="ticket_id" value="{{ t.ticket_id }}">
-<input name="by" value="{{ me.name }}" placeholder="Decision maker" required style="width:100%"><select name="role"><option value="Magic">Magic (standing approval)</option><option value="UMGC">UMGC approver</option></select>
-<select name="change_class"><option {{ 'selected' if t.change_class=='routine' }}>routine</option><option {{ 'selected' if t.change_class=='material' }}>material</option></select>
-<input name="note" placeholder="Note" style="width:100%"><button name="decision" value="approve">Approve</button> <button class="sec" name="decision" value="reject">Reject</button></form>
+<td>{% if t.status == 'proposed' and (can('ticket.routine') or can('ticket.material')) %}<form method="post" action="/p/{{ p.id }}/ticket" style="min-width:220px"><input type="hidden" name="ticket_id" value="{{ t.ticket_id }}">
+<label class="sr-only" for="cc-{{ t.ticket_id }}">Change class</label><select id="cc-{{ t.ticket_id }}" name="change_class"><option {{ 'selected' if t.change_class=='routine' }}>routine</option><option {{ 'selected' if t.change_class=='material' }}>material</option></select>
+<label class="sr-only" for="tn-{{ t.ticket_id }}">Note</label><input id="tn-{{ t.ticket_id }}" name="note" placeholder="Note" class="w100" style="margin:4px 0"><button class="small" name="decision" value="approve">Approve</button> <button class="small sec" name="decision" value="reject">Reject</button></form>
+{% if not can('ticket.material') %}<div class="muted">Material changes need a UMGC approver.</div>{% endif %}
 {% elif t.decision %}<span class="muted">{{ t.decision.by }} ({{ t.decision.role }}), {{ t.decision.at }}</span>{% endif %}</td></tr>
-{% else %}<tr><td colspan="8" class="muted">No tickets yet.</td></tr>{% endfor %}</table>
-<p class="muted">Routine corrections run under standing approval. Material changes (objectives, assessment design, structure) need a UMGC approver before release (Technical Proposal 2.2.3.2).</p>
+{% else %}<tr><td colspan="8" class="muted">No tickets yet.</td></tr>{% endfor %}</tbody></table>
+{% if can('event.raise') %}<details class="mt"><summary>Raise an event-triggered ticket</summary><form method="post" action="/p/{{ p.id }}/event" class="card mt">
+<div class="field"><label for="et">Event</label><input id="et" name="title" class="w100" required placeholder="e.g. Security+ objective update"></div>
+<div class="field"><label for="ed">What changed</label><textarea id="ed" name="detail" rows="2"></textarea></div>
+<div class="row"><label for="etg">Target</label><select id="etg" name="target"><option value="">Program-wide</option>{% for a in assets %}<option>{{ a }}</option>{% endfor %}</select>
+<label for="ec">Class</label><select id="ec" name="change_class"><option>material</option><option>routine</option></select><button>Raise ticket</button></div></form></details>{% endif %}
+<h3>Data-informed thresholds</h3><div class="kv">{% for k, v in config.THRESHOLDS.items() %}<div>{{ k.replace('_',' ') }}</div><div>{{ v }}</div>{% endfor %}</div>
+
+{% elif tab == 'refresh' %}
+<p class="lead">Every quarter the skills worker re-verifies each Lightcast skill ID, stamps the taxonomy version, re-pulls demand and raises tickets for shifts over 25 percent. It runs on the Render cron; you can run it now.</p>
+{% if can('refresh.run') %}<form method="post" action="/p/{{ p.id }}/refresh"><button>Run the Lightcast refresh now</button></form>{% endif %}
+{% if refresh %}<h2>Last refresh</h2><div class="kv">{% for k, v in refresh.items() %}{% if v is not mapping and (v is string or v is number) %}<div>{{ k.replace('_',' ') }}</div><div>{{ v }}</div>{% endif %}{% endfor %}</div>{% else %}<p class="muted">No refresh has run yet.</p>{% endif %}
+<h2>Refresh jobs</h2><table><thead><tr><th>Job</th><th>Status</th><th>Queued</th><th>Finished</th></tr></thead><tbody>{% for j in refresh_jobs %}<tr><td>{{ j.dedupe_key }}</td><td>{{ j.status }}</td><td>{{ j.created_at.strftime('%Y-%m-%d %H:%M') }}</td><td>{{ j.finished_at.strftime('%Y-%m-%d %H:%M') if j.finished_at else '' }}</td></tr>{% else %}<tr><td colspan="4" class="muted">None yet.</td></tr>{% endfor %}</tbody></table>
+
+{% elif tab == 'recurring' %}
+<p class="lead">Recurring support deliverables (Attachment C 6.6): generated from live records each month, then submitted and accepted in the deliverables register within 5 business days of month end.</p>
+<div class="grid3">{% for k, t, d in [('monthly','Monthly Performance Report (6.6.1)','Outcomes, content effectiveness, tutor, AI quality sample, actions'),('sla','Monthly Service Level Report (6.6.2)','Availability, response and resolution against Attachment B'),('cip','Continuous Improvement Plan (6.6.3)','Tickets by trigger and status, and the plan for the quarter')] %}
+<div class="card"><h3>{{ t }}</h3><p class="muted">{{ d }}</p><div class="row"><a class="btn small" href="/p/{{ p.id }}/doc/{{ k }}">View</a><a class="btn small sec" href="/p/{{ p.id }}/doc/{{ k }}.docx">Word</a></div></div>{% endfor %}</div>
+
+{% elif tab == 'releases' %}
+<p class="lead">Maintenance releases (6.6.4): each approved ticket's revision passes the same five validation gates, then ships as a numbered release without relaunching the Program.</p>
+<table><thead><tr><th>Release</th><th>Status</th><th>Class</th><th>Changed assets</th><th>Tickets</th><th>Built</th><th></th></tr></thead><tbody>
+{% for ver, status, r in rels|reverse %}<tr><td>{{ ver }}</td><td><span class="pill {{ 'ok' if status=='live' else '' }}">{{ status }}</span></td><td>{{ r.change_class }}</td><td>{{ r.changed_assets|join(', ') or 'all (initial)' }}</td><td>{{ r.tickets|join(', ') or '-' }}</td><td class="muted">{{ r.created_at }}</td><td><a class="small" href="/p/{{ p.id }}/download/package/{{ ver }}">Package</a></td></tr>
+{% else %}<tr><td colspan="7" class="muted">No releases yet.</td></tr>{% endfor %}</tbody></table>
+{% endif %}
 {% endblock %}

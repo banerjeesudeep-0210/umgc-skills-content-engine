@@ -81,10 +81,18 @@ def save_draft(program_id: int, key: str, content: dict, by: str, role: str, bas
         dr = a.get("draft")
         if dr and dr.get("edited_by") and dr["edited_by"] != by and dr.get("base_revision") == a["revision"]:
             pass  # shared working copy: the last save wins, the history below keeps every save
-        a["draft"] = {"content": content, "base_revision": base_rev, "edited_by": by, "role": role, "edited_at": _now(),
-                      "history": (dr or {}).get("history", [])[-19:] + [{"by": by, "at": _now()}]}
+        hist = list((dr or {}).get("history", []))
+        from .edits import throttled
+        if not hist or hist[-1].get("by") != by or throttled(("dhist", program_id, key, by), 300):
+            hist = hist[-29:] + [{"by": by, "role": role, "at": _now(), "content": content}]
+        else:
+            hist[-1] = {**hist[-1], "at": _now(), "content": content}
+        editors = sorted(set((dr or {}).get("editors", [])) | {by})
+        a["draft"] = {"content": content, "base_revision": base_rev, "edited_by": by, "role": role, "edited_at": _now(), "history": hist, "editors": editors}
         put_record(s, program_id, "asset", key, a)
-        log(s, program_id, by or "author", "author", f"Draft of {key} saved by {by or 'unnamed'} ({role}).")
+        from .edits import throttled
+        if throttled(("draft", program_id, key, by)):
+            log(s, program_id, by or "author", "author", f"Draft of {key} being edited by {by or 'unnamed'} ({role}).")
     return ""
 
 
@@ -105,7 +113,7 @@ def apply_draft(s, pid, key, content, by, role, base_rev, source):
                                              else "Human-authored"),
         "model": prev.get("model", "none"), "prompt_id": prev.get("prompt_id", "author"), "prompt_version": prev.get("prompt_version", ""),
         "source_pack_version": prev.get("source_pack_version"), "taxonomy_version": prev.get("taxonomy_version"),
-        "drafted_at": _now(), "drafted_by": f"{by} ({role})", "feedback_applied": [f"Author revision from r{base_rev} via {source}"], "gates": {}}
+        "drafted_at": _now(), "drafted_by": f"{by} ({role})", "co_editors": (a.get("draft") or {}).get("editors", [by]), "feedback_applied": [f"Author revision from r{base_rev} via {source}"], "gates": {}}
     a["revision"] = rev
     a["state"] = "drafted"
     a["draft"] = None

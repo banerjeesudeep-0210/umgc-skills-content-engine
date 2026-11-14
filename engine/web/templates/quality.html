@@ -1,22 +1,98 @@
 {% extends "base.html" %}
+{% from "_collab.html" import gatebox %}
+{% from "_doc.html" import render %}
 {% block body %}
-{% if not qa %}<p>The QA report is built once Sprint 2 is approved.</p>{% else %}
+{% if tab == 'qa' %}
+{% if not qa %}<div class="card tint">The QA report is built when UMGC approves Sprint 2 content. Until then, every asset is checked on every revision (see each asset).</div>
+{% else %}
 <div class="band">
-  <div><div class="v">{{ qa.summary.courses_releasable }}/{{ qa.summary.courses }}</div><div class="l">Courses at 85+ with no open critical defect</div></div>
+  <div><div class="v">{{ qa.summary.courses_releasable }}/{{ qa.summary.courses }}</div><div class="l">Courses at 85 or higher with no open critical defect</div></div>
   <div><div class="v">{{ qa.summary.links_evidenced }}/{{ qa.summary.links }}</div><div class="l">assessment-skill links evidenced in items</div></div>
   <div><div class="v">{{ qa.summary.remediated }}/{{ qa.summary.defects_total }}</div><div class="l">findings remediated by revision</div></div>
   <div><div class="v">{{ qa.coverage.rules|selectattr('passed')|list|length }}/5</div><div class="l">coverage rules on built content</div></div>
 </div>
-<h2>Course release standard (100 points, release at 85)</h2>
-<div style="overflow:auto"><table><tr><th>Course</th>{% for d in qa.release_scores[0].dimensions %}<th>{{ d.dimension }} ({{ d.weight }})</th>{% endfor %}<th>Score</th><th>Release</th></tr>
-{% for x in qa.release_scores %}<tr><td>{{ x.course }}</td>{% for d in x.dimensions %}<td>{{ d.points }} <span class="muted">({{ d.rating }}/4)</span></td>{% endfor %}<td><b>{{ x.score }}</b></td><td><span class="pill {{ 'ok' if x.release else 'bad' }}">{{ 'release' if x.release else 'hold' }}</span></td></tr>{% endfor %}</table></div>
-<div class="grid g2">
-<div><h2>Course-by-skill: declared vs evidenced (Lightcast trace)</h2>
-<table><tr><th>Course</th><th>Declared</th><th>Evidenced</th><th>Declared, no evidence</th><th>Evidenced, not declared</th></tr>
-{% for c in qa.course_skill_map %}<tr><td>{{ c.course_id }}</td><td>{{ c.declared }}</td><td>{{ c.declared_and_evidenced }}</td><td>{{ c.declared_no_evidence|join(', ') }}</td><td class="muted">{{ c.evidenced_not_declared|join(', ') }}</td></tr>{% endfor %}</table>
-<h2>Test plan</h2><ol>{% for t in qa.test_plan %}<li>{{ t }}</li>{% endfor %}</ol></div>
-<div><h2>Defect resolution log</h2><div style="max-height:520px;overflow:auto"><table><tr><th>Asset</th><th>Rev</th><th>Severity</th><th>Check</th><th>Finding</th><th>Status</th></tr>
-{% for d in qa.defects|sort(attribute='severity') %}<tr><td>{{ d.asset }}</td><td>{{ d.revision }}</td><td class="sev-{{ d.severity }}">{{ d.severity }}</td><td>{{ d.check }}</td><td>{{ d.message }}</td><td class="muted">{{ d.status }}</td></tr>{% endfor %}</table></div></div>
-</div>
+<h2>Review window 4: UMGC accepts the QA report</h2>
+{{ gatebox(gates.get('umgc.qa'), p, '/p/' ~ p.id ~ '/quality?tab=qa', can('gate.umgc')) }}
+<h2>Release standard (100 points, release at 85)</h2>
+<div class="tablewrap"><table><thead><tr><th>Course</th>{% for d in qa.release_scores[0].dimensions %}<th>{{ d.dimension }} ({{ d.weight }})</th>{% endfor %}<th>Score</th><th>Release</th></tr></thead><tbody>
+{% for x in qa.release_scores %}<tr><td>{{ x.course }}</td>{% for d in x.dimensions %}<td class="num">{{ d.points }} <span class="muted">({{ d.rating }}/4)</span></td>{% endfor %}<td class="num"><b>{{ x.score }}</b></td><td><span class="pill {{ 'ok' if x.release else 'bad' }}">{{ 'release' if x.release else 'hold' }}</span></td></tr>{% endfor %}</tbody></table></div>
+<div class="grid2">
+<div><h2>Declared against evidenced skills (Lightcast)</h2>
+<table><thead><tr><th>Course</th><th>Declared</th><th>Evidenced</th><th>Declared, no evidence</th></tr></thead><tbody>{% for c in qa.course_skill_map %}<tr><td>{{ c.course_id }}</td><td class="num">{{ c.declared }}</td><td class="num">{{ c.declared_and_evidenced }}</td><td>{{ c.declared_no_evidence|join(', ') or 'none' }}</td></tr>{% endfor %}</tbody></table></div>
+<div><h2>Defect resolution log</h2><div class="tablewrap" style="max-height:420px"><table><thead><tr><th>Asset</th><th>Rev</th><th>Severity</th><th>Finding</th><th>Status</th></tr></thead><tbody>
+{% for d in qa.defects|sort(attribute='severity') %}<tr><td>{{ d.asset }}</td><td>{{ d.revision }}</td><td class="sev-{{ d.severity }}">{{ d.severity }}</td><td>{{ d.message }}</td><td class="muted">{{ d.status }}</td></tr>{% else %}<tr><td colspan="5" class="muted">No findings.</td></tr>{% endfor %}</tbody></table></div></div>
+</div>{% endif %}
+<div class="row mt"><h2>Test plan (6.4.1)</h2><a class="btn sec small right" href="/p/{{ p.id }}/doc/testplan.docx">Download Word</a></div>
+{{ render(tp) }}
+
+{% elif tab == 'a11y' %}
+<p class="lead">Automated WCAG 2.1 AA checks run on every revision. People test with assistive technology here, and any limitation gets a remediation plan and date (RFP Attachment A 8; Attachment C 5.4.1).</p>
+{% set tested = a11y.keys()|list %}
+<div class="stats"><div><div class="v">{{ tested|length }}/{{ assets|length }}</div><div class="l">assets tested with assistive technology</div></div>
+<div><div class="v">{{ lims|selectattr('status','equalto','open')|list|length }}</div><div class="l">open limitations</div></div></div>
+{% if can('a11y.record') %}
+<form method="post" action="/p/{{ p.id }}/a11y" class="card">
+<h3>Record a test</h3>
+<div class="grid4"><div class="field"><label for="aa">Asset</label><select id="aa" name="asset" class="w100">{% for a in assets %}<option value="{{ a.asset_id }}">{{ a.asset_id }} {{ a.title[:40] }}{{ ' (tested)' if a.asset_id in tested }}</option>{% endfor %}</select></div>
+{% for k, l in AT_TESTS %}<div class="field"><label for="t-{{ k }}">{{ l }}</label><select id="t-{{ k }}" name="{{ k }}"><option>pass</option><option>fail</option><option>not tested</option><option>not applicable</option></select></div>{% endfor %}</div>
+<div class="field"><label for="anote">Notes</label><input id="anote" name="note" class="w100"></div><button>Record test</button></form>{% endif %}
+<h2>Test record</h2>
+<table><thead><tr><th>Asset</th><th>Rev</th>{% for k, l in AT_TESTS %}<th>{{ l }}</th>{% endfor %}<th>By</th></tr></thead><tbody>
+{% for key, r in a11y.items() %}<tr><td><a href="/p/{{ p.id }}/asset/{{ key }}">{{ key }}</a></td><td>{{ r.revision }}</td>{% for k, l in AT_TESTS %}<td><span class="pill {{ 'ok' if r.results[k]=='pass' else ('bad' if r.results[k]=='fail' else '') }}">{{ r.results[k] }}</span></td>{% endfor %}<td class="muted">{{ r.by }}<br>{{ r.at }}</td></tr>
+{% else %}<tr><td colspan="9" class="muted">No assistive technology tests recorded yet.</td></tr>{% endfor %}</tbody></table>
+<h2>Limitations and remediation plan</h2>
+<table><thead><tr><th>ID</th><th>Asset</th><th>Limitation</th><th>WCAG criterion</th><th>Remediation plan</th><th>By</th><th>Status</th></tr></thead><tbody>
+{% for l in lims %}<tr><td>{{ l.id }}</td><td>{{ l.asset }}</td><td>{{ l.issue }}</td><td>{{ l.criterion }}</td><td>{{ l.plan }}</td><td>{{ l.due }}</td>
+<td>{% if l.status == 'open' and can('a11y.record') %}<form method="post" action="/p/{{ p.id }}/limitation/close" class="inline"><input type="hidden" name="lid" value="{{ l.id }}"><button class="small sec">Mark remediated</button></form>{% else %}<span class="pill {{ 'warn' if l.status=='open' else 'ok' }}">{{ l.status }}</span>{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">No limitations recorded.</td></tr>{% endfor %}</tbody></table>
+{% if can('a11y.record') %}<details class="mt"><summary>Record a limitation</summary><form method="post" action="/p/{{ p.id }}/limitation" class="card mt">
+<div class="grid4"><div class="field"><label for="la">Asset</label><select id="la" name="asset" class="w100">{% for a in assets %}<option>{{ a.asset_id }}</option>{% endfor %}</select></div>
+<div class="field"><label for="lc">WCAG criterion</label><input id="lc" name="criterion" placeholder="e.g. 1.2.2 Captions"></div>
+<div class="field"><label for="ld">Remediate by</label><input id="ld" type="date" name="due" required></div></div>
+<div class="field"><label for="li">Limitation</label><input id="li" name="issue" class="w100" required></div>
+<div class="field"><label for="lp">Remediation plan and interim alternative</label><textarea id="lp" name="plan" rows="2" required></textarea></div><button>Record</button></form></details>{% endif %}
+
+{% elif tab == 'sampling' %}
+<p class="lead">Each week the Content Quality Owner scores a reproducible sample of AI-assisted assets on six criteria, 1 to 4 (Technical Proposal 2.3.1). A 1 or 2 raises a ticket. Week {{ week }}.</p>
+{% if ssum %}<div class="stats"><div><div class="v">{{ ssum.n }}</div><div class="l">samples scored</div></div><div><div class="v">{{ ssum.mean }}</div><div class="l">mean of 4</div></div>{% for c, l in CRITERIA %}<div><div class="v">{{ ssum.by_criterion[c] }}</div><div class="l">{{ l }}</div></div>{% endfor %}<div><div class="v">{{ ssum.below }}</div><div class="l">below standard</div></div></div>{% endif %}
+{% for q in queue if not q.score %}<form id="sf{{ loop.index }}" method="post" action="/p/{{ p.id }}/sample"><input type="hidden" name="key" value="{{ q.key }}"></form>{% endfor %}
+<table><thead><tr><th>Asset</th><th>AI contribution</th>{% for c, l in CRITERIA %}<th>{{ l }}</th>{% endfor %}<th>Note</th><th></th></tr></thead><tbody>
+{% set n = namespace(i=0) %}
+{% for q in queue %}<tr><td><a href="/p/{{ p.id }}/asset/{{ q.asset }}">{{ q.asset }}</a> r{{ q.revision }}<div class="muted">{{ q.title[:40] }}</div></td><td class="muted">{{ q.ai }}</td>
+{% if q.score %}{% for c, l in CRITERIA %}<td class="num">{{ q.score.scores[c] }}</td>{% endfor %}<td class="muted">{{ q.score.note }}</td><td class="muted">{{ q.score.by }}</td>
+{% else %}{% set n.i = n.i + 1 %}{% set f = 'sf' ~ n.i %}
+{% for c, l in CRITERIA %}<td><label class="sr-only" for="{{ f }}-{{ c }}">{{ l }}, {{ q.asset }}</label><select id="{{ f }}-{{ c }}" name="{{ c }}" form="{{ f }}" {{ 'disabled' if not can('sample.score') }}><option></option>{% for v in [4,3,2,1] %}<option>{{ v }}</option>{% endfor %}</select></td>{% endfor %}
+<td><label class="sr-only" for="{{ f }}-note">Note, {{ q.asset }}</label><input id="{{ f }}-note" name="note" form="{{ f }}" style="width:140px" {{ 'disabled' if not can('sample.score') }}></td><td>{% if can('sample.score') %}<button class="small" form="{{ f }}">Score</button>{% endif %}</td>{% endif %}</tr>
+{% else %}<tr><td colspan="10" class="muted">No AI-assisted assets yet.</td></tr>{% endfor %}</tbody></table>
+{% if not can('sample.score') %}<p class="muted">The Magic Content Quality Owner scores samples.</p>{% endif %}
+
+{% elif tab == 'deliverables' %}
+<p class="lead">Every Attachment C deliverable with its acceptance criteria. UMGC reviews within 5 business days; up to two review rounds (Attachment C 8; Appendix C-1 Section 5). Gate-backed deliverables are accepted at their UMGC gate.</p>
+<table><thead><tr><th>Code</th><th>Deliverable</th><th>Due</th><th>Acceptance criteria</th><th>How accepted</th><th>Status</th><th>Action</th></tr></thead><tbody>
+{% for d in dels %}<tr><td>{{ d.code }}</td><td><b>{{ d.name }}</b><div class="muted">{{ d.phase }}</div>{% if d.doc %}<a href="/p/{{ p.id }}/doc/{{ d.doc }}">Generated draft</a>{% endif %}</td><td>{{ d.due }}<div class="muted">{{ d.milestone }}</div></td>
+<td><details><summary>{{ d.criteria|length }} criteria</summary><ul>{% for c in d.criteria %}<li>{{ c }}</li>{% endfor %}</ul></details></td><td class="muted">{{ d.mode }}</td>
+<td><span class="pill {{ 'ok' if d.accepted else ('warn' if 'review' in d.status or 'returned' in d.status else '') }}">{{ d.status }}</span>
+{% for r in d.rounds %}<div class="muted">Round {{ r.round }}: submitted {{ r.submitted_at }} by {{ r.submitted_by }}; due {{ r.due }}{% if r.decision %}; {{ r.decision }} by {{ r.decided_by }}{% if r.decision_note %} ({{ r.decision_note }}){% endif %}{% endif %}</div>{% endfor %}</td>
+<td>{% if d.how == 'register' %}
+  {% set waiting = d.rounds and not d.rounds[-1].decision %}
+  {% if waiting and can('deliverable.accept') %}<form method="post" action="/p/{{ p.id }}/deliverable" class="inline"><input type="hidden" name="code" value="{{ d.code }}"><label class="sr-only" for="dn{{ loop.index }}">Note</label><input id="dn{{ loop.index }}" name="note" placeholder="Note (required to return)" style="width:160px"><button class="small" name="action" value="accept">Accept</button><button class="small sec" name="action" value="return">Return</button></form>
+  {% elif not waiting and not d.accepted and can('deliverable.submit') %}{% if d.rounds|length >= 2 %}<span class="muted">Two rounds used: escalate per the contract cure process. </span>{% endif %}<form method="post" action="/p/{{ p.id }}/deliverable" class="inline"><input type="hidden" name="code" value="{{ d.code }}"><label class="sr-only" for="ds{{ loop.index }}">Note</label><input id="ds{{ loop.index }}" name="note" placeholder="Submission note" style="width:160px"><button class="small" name="action" value="submit">Submit to UMGC</button></form>{% endif %}
+{% else %}<a class="small" href="/p/{{ p.id }}/{{ {'design':'design?tab=gate','develop':'develop?tab=reviews','quality':'quality?tab=qa','release':'quality?tab=releases'}.get(d.page, d.page) }}">Go to the gate</a>{% endif %}</td></tr>{% endfor %}</tbody></table>
+
+{% elif tab == 'releases' %}
+{% if not rels %}<div class="card tint">The first release is built after UMGC accepts the QA report.</div>{% else %}
+<h2>Launch approval</h2>{{ gatebox(gates.get('umgc.launch'), p, '/p/' ~ p.id ~ '/quality?tab=releases', can('gate.umgc')) }}
+<p class="row mt"><a class="btn sec small" href="/p/{{ p.id }}/doc/readiness">Launch Readiness Report (6.5.3)</a><a class="btn sec small" href="/p/{{ p.id }}/doc/training">Training Materials (6.5.2)</a></p>
+{% for ver, status, r in rels|reverse %}
+<h2>Release {{ ver }} <span class="pill {{ 'ok' if status=='live' else '' }}">{{ status }}</span></h2>
+<p>{{ r.created_at }} | {{ r.change_class }} | {{ r.manifest|length }} assets{% if r.changed_assets %} | changed: {{ r.changed_assets|join(', ') }}{% endif %}{% if r.tickets %} | tickets {{ r.tickets|join(', ') }}{% endif %}
+ <a class="btn sec small" href="/p/{{ p.id }}/download/package/{{ ver }}">Download content package</a></p>
+<div class="grid2">
+<div><h3>Launch readiness</h3><table><tbody>{% for c in r.launch_readiness.checklist %}<tr><td>{{ c.item }}</td><td><span class="pill {{ 'ok' if c.ok else 'bad' }}">{{ 'yes' if c.ok else 'no' }}</span></td></tr>{% endfor %}</tbody></table></div>
+<div>{% if r.tutor_evaluation %}<h3>Tutor evaluation set</h3><p>{% for k, v in r.tutor_evaluation.by_category.items() %}<span class="pill {{ 'ok' if v.rate >= r.tutor_evaluation.thresholds[k] else 'bad' }}">{{ k.replace('_',' ') }} {{ v.passed }}/{{ v.total }}</span> {% endfor %} <b>{{ 'passed' if r.tutor_evaluation.passed else 'failed' }}</b></p>
+<details><summary>All {{ r.tutor_evaluation.cases|length }} cases</summary><table><tbody>{% for c in r.tutor_evaluation.cases %}<tr><td>{{ c.category }}</td><td>{{ c.q }}</td><td><span class="pill {{ 'ok' if c.passed else 'bad' }}">{{ c.got }}</span></td></tr>{% endfor %}</tbody></table></details>
+{% else %}<p class="muted">No Module changed, so the previous tutor evaluation stands.</p>{% endif %}
+<h3>Provenance</h3><div class="tablewrap" style="max-height:260px"><table><thead><tr><th>Asset</th><th>Rev</th><th>Contribution</th><th>Gates</th></tr></thead><tbody>{% for x in r.provenance %}<tr><td>{{ x.asset }}</td><td>{{ x.revision }}</td><td>{{ x.ai_contribution }}</td><td>{{ x.gates|length }}/5</td></tr>{% endfor %}</tbody></table></div></div>
+</div>{% endfor %}{% endif %}
 {% endif %}
 {% endblock %}

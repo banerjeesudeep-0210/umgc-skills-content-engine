@@ -18,13 +18,14 @@ from . import config
 from .db import WorkerBeat, init_db, log, now, session
 from .orchestrator import advance
 from .queue import claim, finish, reset_stuck
-from . import sources
+from . import outline, sources
 from .stages import build, define, deliver, design, improve, learn, measure, qa
 
 TASKS = {
     "skills.define": define.run,
     "refresh.lightcast": improve.run_refresh,
     "design.blueprint": design.run,
+    "design.outline": outline.run,
     "build.asset": build.run,
     "qa.asset_checks": qa.run_asset_checks,
     "qa.program": qa.run_program_qa,

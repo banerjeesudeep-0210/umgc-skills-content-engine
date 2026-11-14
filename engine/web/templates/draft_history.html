@@ -1,0 +1,10 @@
+{% extends "base.html" %}
+{% block h1 %}Version history: {{ a.asset_id }}{% endblock %}
+{% block body %}
+<p><a href="/p/{{ p.id }}/edit/{{ a.asset_id }}">Back to the document</a> | <a href="/p/{{ p.id }}/asset/{{ a.asset_id }}">Submitted revisions (r1 to r{{ a.revision }})</a></p>
+<p class="lead">Snapshots of the shared working draft: one per editor for every five minutes of editing. Submitted revisions and their comparisons are on the asset page.</p>
+<table><thead><tr><th>#</th><th>When</th><th>Editor</th><th>Role</th><th></th></tr></thead><tbody>
+{% for h in hist|reverse %}{% set idx = hist|length - loop.index %}<tr><td>{{ idx + 1 }}</td><td>{{ h.at }}</td><td>{{ h.by }}</td><td class="muted">{{ h.role }}</td><td><a class="btn small sec" href="?i={{ idx }}">Show changes</a></td></tr>
+{% else %}<tr><td colspan="5" class="muted">No working draft yet. Snapshots appear once someone edits.</td></tr>{% endfor %}</tbody></table>
+{% if d_html %}<h2>Changes in snapshot {{ i + 1 }}</h2><div class="diff tablewrap">{{ d_html|safe }}</div>{% endif %}
+{% endblock %}

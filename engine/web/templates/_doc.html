@@ -1,0 +1,11 @@
+{% macro render(doc) %}
+<div class="doc-view">
+{% for b in doc.blocks %}
+  {% if b[0] == 'h' %}<h2>{{ b[1] }}</h2>
+  {% elif b[0] == 'p' %}<p>{{ b[1] }}</p>
+  {% elif b[0] == 'ul' %}<ul>{% for it in b[1] %}<li>{{ it }}</li>{% endfor %}</ul>
+  {% elif b[0] == 'table' %}<table><thead><tr>{% for h in b[1] %}<th>{{ h }}</th>{% endfor %}</tr></thead><tbody>{% for r in b[2] %}<tr>{% for c in r %}<td>{{ c if c is not none else '' }}</td>{% endfor %}</tr>{% else %}<tr><td colspan="{{ b[1]|length }}" class="muted">None yet.</td></tr>{% endfor %}</tbody></table>
+  {% endif %}
+{% endfor %}
+</div>
+{% endmacro %}

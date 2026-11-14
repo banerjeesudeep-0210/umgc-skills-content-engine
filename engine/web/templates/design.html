@@ -1,0 +1,67 @@
+{% extends "base.html" %}
+{% from "_collab.html" import grid as gridm, lockbar, gatebox %}
+{% block head %}{% if not bp %}<meta http-equiv="refresh" content="5">{% endif %}{% endblock %}
+{% block body %}
+{% if not bp %}
+<div class="card tint">{% if not sm %}The Blueprint is drafted after UMGC approves the skills map at Gate 1.{% else %}The design worker drafts the Blueprint once Gate 1 is approved: {{ spec.program.courses }} Courses over {{ spec.program.duration_weeks }} weeks at {{ spec.program.weekly_hours }} hours a week. This page refreshes when it is ready.{% endif %}</div>
+{% else %}
+<div class="stats">
+  <div><div class="v">{{ bp.courses|length }}</div><div class="l">Courses</div></div>
+  <div><div class="v">{{ bp.courses|map(attribute='modules')|map('length')|sum }}</div><div class="l">Modules</div></div>
+  <div><div class="v">{{ bp.objectives|length }}</div><div class="l">objectives</div></div>
+  <div><div class="v">{{ bp.assessments|length }}</div><div class="l">assessments</div></div>
+  <div><div class="v">{{ bp.coverage.rules|selectattr('passed')|list|length }}/5</div><div class="l">coverage rules pass</div></div>
+  <div><div class="v">{{ bp.seat_time.total_hours }}</div><div class="l">learner hours (spec {{ total_hours }})</div></div>
+</div>
+{% if tab in ('courses','modules','objectives','assessments') %}
+{{ lockbar(lock, 'blueprint', p, can('blueprint.reopen')) }}
+<p class="muted">{{ {'courses':'One Course per week by default, sized to the weekly learner hours. Course order sets the sequence prerequisites.',
+ 'modules':'Modules belong to a Course. List objective and skill IDs separated by commas; coverage and the trace matrix recompute on every save.',
+ 'objectives':'Each objective names its Bloom level, competency, skills and the Modules that teach it.',
+ 'assessments':'Measured skills count toward coverage; a performance task is required for every Core skill. Labs, applied exercises and the capstone keep learner work between sessions; every graded item auto-grades to at least pass/fail.'}[tab] }}</p>
+{{ gridm(grid, 'Blueprint ' ~ tab ~ ' grid', 'Add ' ~ tab[:-1]) }}
+{% elif tab == 'coverage' %}
+<div class="grid2">
+<div>
+  <h2>Five coverage rules</h2>
+  <table><thead><tr><th>Rule</th><th>Result</th><th>Failures</th></tr></thead><tbody>{% for r in bp.coverage.rules %}<tr><td>{{ r.rule }}</td><td><span class="pill {{ 'ok' if r.passed else 'bad' }}">{{ 'pass' if r.passed else 'fail' }}</span></td><td>{{ r.failures|join(', ') or 'none' }}</td></tr>{% endfor %}</tbody></table>
+  <h2>Completion definition</h2><p>{{ bp.completion_definition or completion }}</p>
+  <h2>Prerequisites</h2>
+  <p>Graph {{ 'is acyclic' if bp.dag.acyclic else 'has a cycle: ' ~ bp.dag.cycle|join(' > ') }}; {{ bp.dag.edges }} edges ({% for k, v in bp.dag.by_type.items() %}{{ k.replace('_',' ') }} {{ v }}{{ ', ' if not loop.last }}{% endfor %}).</p>
+  <details><summary>All prerequisite edges</summary><table><thead><tr><th>From</th><th>To</th><th>Type</th><th>Why</th></tr></thead><tbody>{% for e in bp.prerequisites %}<tr><td>{{ e.from_id }}</td><td>{{ e.to_id }}</td><td>{{ e.relation_type }}</td><td class="muted">{{ e.rationale }}</td></tr>{% endfor %}</tbody></table></details>
+</div>
+<div>
+  <h2>Seat-time map</h2>
+  <table><thead><tr><th>Course</th><th class="num">Online</th><th class="num">Reading</th><th class="num">Practice</th><th class="num">Total</th></tr></thead><tbody>
+  {% for r in bp.seat_time.rows %}<tr><td>{{ r.course_id }} {{ r.name }}</td><td class="num">{{ r.online }}</td><td class="num">{{ r.reading }}</td><td class="num">{{ r.practice }}</td><td class="num"><b>{{ r.total }}</b></td></tr>{% endfor %}
+  <tr><td><b>Program</b></td><td></td><td></td><td></td><td class="num"><b>{{ bp.seat_time.total_hours }}</b></td></tr></tbody></table>
+  <p class="muted">Method: learner engagement hours = online instruction + reading + practice, estimated from word counts, media minutes and task time (COMAR seat-time map). The specification asks for {{ total_hours }} hours.</p>
+  <h2>Asset properties UMGC asked for</h2>
+  <table><thead><tr><th>Assessment</th><th>Type</th><th>Auto-grade</th><th>Saves work between sessions</th></tr></thead><tbody>
+  {% for a in bp.assessments %}<tr><td>{{ a.assessment_id }} {{ a.name }}</td><td>{{ a.type }}</td><td>{{ a.auto_grade }}</td><td>{{ 'yes' if a.persistent_state else 'no' }}</td></tr>{% endfor %}</tbody></table>
+</div></div>
+<h2>Trace matrix</h2>
+<div class="tablewrap"><table><thead><tr><th>Skill</th><th>Tier</th>{% for a in bp.assessments %}<th title="{{ a.name }}">{{ a.assessment_id }}</th>{% endfor %}<th>Assessed</th></tr></thead><tbody>
+{% set skn = {} %}{% for k in sm.skills %}{% set t = bp.trace_matrix.get(k.skill_id, {}) %}<tr><td><a href="/p/{{ p.id }}/trace?skill={{ k.skill_id }}">{{ k.skill_id }}</a> {{ (k.lightcast_skill_name or k.name)[:34] }}</td><td>{{ k.tier }}</td>{% for a in bp.assessments %}{% set v = t.get('cells', {}).get(a.assessment_id, '') %}<td style="text-align:center;{{ 'background:var(--purple);color:#fff' if v=='A' else ('background:var(--p100)' if v=='P' else '') }}">{{ v }}</td>{% endfor %}<td class="num">{{ t.get('times_assessed', 0) }}</td></tr>{% endfor %}</tbody></table></div>
+<p class="muted">A = assessed, P = practiced.</p>
+{% elif tab == 'gate' %}
+<div class="grid2">
+<div>
+  <h2>Gate 2: UMGC approves the Program Design Blueprint</h2>
+  {{ gatebox(gate, p, '/p/' ~ p.id ~ '/design?tab=gate', can('gate.umgc')) }}
+  {% if bp.umgc_feedback %}<h3>UMGC feedback on earlier versions</h3><ul>{% for f in bp.umgc_feedback %}<li>{{ f }}</li>{% endfor %}</ul>{% endif %}
+  <h3>What UMGC is approving</h3>
+  <ul><li>{{ bp.courses|length }} Courses, {{ bp.courses|map(attribute='modules')|map('length')|sum }} Modules, {{ bp.objectives|length }} objectives, {{ bp.assessments|length }} assessments</li>
+  <li>Completion definition: {{ bp.completion_definition or completion }}</li><li>Coverage rules {{ bp.coverage.rules|selectattr('passed')|list|length }} of 5; prerequisites {{ 'acyclic' if bp.dag.acyclic else 'have a cycle' }}</li>
+  <li>{{ bp.seat_time.total_hours }} learner hours</li></ul>
+  <p><a class="btn sec" href="/p/{{ p.id }}/download/workbook">Download the traceability workbook</a></p>
+</div>
+<div>
+  <h2>Regenerate from the specification</h2>
+  <p>Drafts a new Blueprint from the current Program specification ({{ spec.program.duration_weeks }} weeks, {{ spec.program.weekly_hours }} hours a week, {{ spec.program.courses }} Courses) and the approved skills map. The current version is kept in version history.</p>
+  {% if bp.spec_snapshot %}<p class="muted">This Blueprint was drafted for {{ bp.spec_snapshot.duration_weeks }} weeks at {{ bp.spec_snapshot.weekly_hours }} hours a week, {{ bp.spec_snapshot.courses }} Courses.</p>{% endif %}
+  {% if can('blueprint.edit') and not lock.locked %}<form method="post" action="/p/{{ p.id }}/design/regenerate" onsubmit="return confirm('Replace the Blueprint with a new draft? Edits are kept in version history.')"><button class="sec">Regenerate the Blueprint</button></form>{% elif lock.locked %}<p class="muted">Approved: reopen it first.</p>{% endif %}
+</div></div>
+{% endif %}
+{% endif %}
+{% endblock %}

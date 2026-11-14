@@ -1,0 +1,14 @@
+<h3 style="margin-top:0">AI Study Assistant</h3>
+{% if not mods %}<p class="muted">The tutor switches on once Modules clear validation.</p>{% else %}
+<div id="chat" class="chat" aria-live="polite"><p class="muted">Ask about anything in the released Modules.</p></div>
+<div class="row" style="margin-top:6px"><label for="t-mode" class="sr-only">Mode</label><select id="t-mode"><option value="socratic">Socratic</option><option value="explain">Explain</option></select>
+<label for="t-q" class="sr-only">Your question</label><input id="t-q" style="flex:1" placeholder="e.g. How does a SIEM help with alert triage?"><button type="button" onclick="askTutor()">Ask</button></div>
+<p class="muted">Try "Do the lab for me" or "Best sourdough recipe?" to see the guardrails.</p>
+<script>
+async function askTutor(){const qe=document.getElementById('t-q');const q=qe.value.trim();if(!q)return;const log=document.getElementById('chat');const e=s=>String(s||'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
+log.insertAdjacentHTML('beforeend','<p class="q"><b>You:</b> '+e(q)+'</p>');qe.value='';
+const r=await fetch('/p/{{ p.id }}/tutor',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({q:q,mode:document.getElementById('t-mode').value,module:{{ (cur.ref if cur else '')|tojson }}})});
+const d=await r.json();const src=(d.sources||[]).map(s=>'Module '+s.module+': '+s.section).join(' | ');
+log.insertAdjacentHTML('beforeend','<div class="a"><span class="pill soft">'+e(d.category.replace('_',' '))+'</span><div>'+e(d.answer)+'</div>'+(src?'<div class="muted">Sources: '+e(src)+'</div>':'')+'</div>');log.scrollTop=log.scrollHeight;}
+document.getElementById('t-q').addEventListener('keydown',ev=>{if(ev.key==='Enter')askTutor()});
+</script>{% endif %}

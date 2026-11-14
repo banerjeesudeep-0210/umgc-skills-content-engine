@@ -13,19 +13,29 @@ The working version of the end-to-end AI workflow in Magic EdTech's response to 
 | 7 Measure | Completion at 100 and 150 percent of expected time, drop-off, item p-value and discrimination, time on task, tutor clusters | Monthly review |
 | 8 Improve | Quarterly Lightcast refresh, event triggers, data thresholds draft tickets | Routine under standing approval; material changes need a UMGC approver; changes re-enter Build and pass the same gates |
 
+## Product structure (v2)
+
+A workspace (Programs, My work, AI governance, Admin) and, per Program, sections in workflow order: **Overview** (stage tracker, next step, decisions, milestones), **Setup** (Task Order, Program specification with duration in weeks and weekly learner hours, team and SMEs, schedule), **Skills Studio** (sources, skills map, competencies, employer validation and Gate 1), **Design Studio** (Courses, Modules, objectives, assessments, coverage and seat time, Gate 2), **Development Studio** (Module outline, weekly map, assets, review gates, comments, guides), **Quality and Release** (QA and test plan, accessibility record, quality sampling, deliverables and acceptance, releases), **Learner Experience** (preview, tutor, LTI and xAPI), **Insights** (dashboard, eight reports, demographics), **Improvement** (tickets, Lightcast refresh, recurring reports, maintenance releases), **Traceability** (trace explorer, workbook, Attachment D packet, exports) and **Audit** (activity, version history, API calls).
+
+**Accounts and roles.** Named accounts with 12 roles (Administrator; Magic PM, LXA, SME, ID, Accessibility, Editor, Content Quality Owner, AI Governance Lead; UMGC Sponsor, Lead, Reviewer). Every action checks its permission on the server. First sign-in on Render: username `admin` with the `APP_PASSWORD`; then create everyone else in Admin.
+
+**Live co-editing.** Skills, competencies, the four Blueprint grids and the Module outline are shared grids (like Google Sheets in edit mode); Modules and performance tasks are shared documents (like Word or Google Docs in edit mode, with live cursors); item banks are shared grids. Edits sync over `/collab/<room>` (Yjs; the server relays and stores each room) and autosave into the workflow records, where Lightcast resolution, priority, coverage and verb alignment recompute. Approved grids lock; a recorded reopen sends them back to their gate.
+
+**Module outline and weekly map.** After Gate 2 the design worker drafts an outline row per Module: objectives with their action verbs and Bloom levels, the Lightcast skills and their statement verbs, verb alignment to each skill's exit level, planned screens, offline reading, practice and the assessment it feeds. The Instructional Designer or LXA approves it; Build drafts every Module from its row. The weekly map rolls everything up per week against the weekly learner hours.
+
 **Authoring and collaboration zone.** Ingest (upload PDF, Word, PowerPoint, HTML or text; the ingest worker tags every section to Lightcast skills; a Magic SME approves a source before the AI may ground on it), Write (shared drafts for every Module and assessment, AI assist from the approved sources only, submit into checks and the five gates; after launch a submission becomes a change ticket), Collaborate (comments anchored to a screen or item, @mentions, resolve, owners per asset, My inbox), Team (Magic SMEs are a vendor responsibility; roster with expertise and Course ownership). A returned human revision goes back to its author, never to the AI. The asset tracker exports as CSV for UMGC's Smartsheet.
 
 ## Publish on Render
 
 1. Put this folder in a GitHub repository (on github.com: New repository, then "uploading an existing file" and drag the folder contents in; `render.yaml` must sit at the top level).
 2. In Render: New, then Blueprint, pick the repository, and Apply. Render creates the web service, five background workers, two cron jobs and the Postgres database from `render.yaml`.
-3. Open the web service's Environment tab and copy `APP_PASSWORD` (Render generated it). Sign in to the dashboard with any user name and that password.
+3. Open the web service's Environment tab and copy `APP_PASSWORD`. Sign in with username `admin` and that password, then create accounts in Admin.
 4. Open the environment group `skills-engine-keys` and replace `set-me` with your keys:
    - `ANTHROPIC_API_KEY` turns on Claude drafting, AI assist, ticket proposals and the tutor.
    - `LIGHTCAST_CLIENT_ID` and `LIGHTCAST_CLIENT_SECRET` turn on live Lightcast Open Skills (free: lightcast.io/open-skills/access).
    - `LIGHTCAST_LICENSED_PRODUCTS=true` plus `LIGHTCAST_LICENSED_SCOPE` turns on LOT, Job Postings Analytics and Career Pathways under UMGC's or Magic's license.
    Leave any key as `set-me` and that part runs in mock mode: every mock ID and demand figure starts with MOCK, and every provenance record says template-drafted.
-5. Click "Start sample Program". Use "Demo autopilot" to walk the gates quickly, or sign in (top right) with a name and role and decide each gate yourself.
+5. Click "Start the 8-week sample Program". The Administrator can use "Demo autopilot" to walk the gates quickly; otherwise each role decides its own gates.
 
 **Demo option (two paid items).** In Render choose New, then Blueprint, and set the Blueprint file path to `demo/render.yaml`. It creates one web service that runs every worker inside itself, plus Postgres, and asks for your keys during setup.
 
@@ -42,6 +52,9 @@ Double-click `Run Skills Content Engine.command` (Mac) or `run_local.bat` (Windo
 - `engine/stages/` one module per stage. `engine/sources.py` ingest and the grounding pack. `engine/studio.py` drafts, comments, owners, team.
 - `engine/clients/lightcast.py` live and mock Lightcast; `engine/clients/llm.py` Claude with prompt IDs and versions for provenance.
 - `engine/exports.py` traceability workbook (Exhibit I shape plus build, QA, provenance, gates, tickets, API calls), trace JSON, release packages.
-- `engine/web/` dashboard (FastAPI and Jinja, Magic brand).
+- `engine/rbac.py` roles and permissions; `engine/auth.py` accounts and signed sessions; `engine/collab.py` the co-editing relay; `engine/web/static/collab.js` the editor bundle (source in `static/src`, TipTap and Yjs).
+- `engine/spec.py` Task Order specification, milestones, deliverables register; `engine/edits.py` grid saves, locks, reopen, version history; `engine/outline.py` Module outline and weekly map.
+- `engine/quality.py` sampling, accessibility record, demographics, eight reports; `engine/governance.py` models, prompts, evaluations, incidents; `engine/docsgen.py` generated deliverables (Word).
+- `engine/web/` the product (FastAPI and Jinja, Magic purple, WCAG 2.1 AA).
 
 The synthetic learner cohort in Stage 6 stands in for the delivery platform's LRS so Measure and Improve have signals before UMGC learners arrive; it plants four signals in revision 1 (a drop-off Module, a slow lab, an ambiguous item, a tutor question cluster) that the Improve stage must find and the gates must fix.

@@ -1,0 +1,41 @@
+{% extends "base.html" %}
+{% block body %}
+{% if tab == 'preview' %}
+<p class="lead">What a learner sees, from released and validated Modules. In production the delivery platform shows this inside Brightspace through LTI 1.3; this preview runs the same content and the same tutor.</p>
+{% if not cur %}<div class="card tint">The preview fills as Modules clear the five validation gates.</div>{% else %}
+{% set screens = cur.content.screens or [] %}{% set sc = screens[screen] if screen < screens|length else None %}
+<div class="learner">
+  <nav class="lnav" aria-label="Modules">
+    {% if bp %}{% for c in bp.courses %}<div style="margin:8px 0 4px"><b>{{ c.course_id }}</b> {{ c.name }}</div>
+      {% for m in c.modules %}{% set ok = mods|selectattr(0,'equalto',m.module_id)|list %}<div style="padding:2px 0 2px 8px">{% if ok %}<a href="?tab=preview&module={{ m.module_id }}" {% if m.module_id == cur.ref %}aria-current="page" style="font-weight:600"{% endif %}>{{ m.module_id }} {{ m.title[:34] }}</a>{% else %}<span class="muted">{{ m.module_id }} {{ m.title[:30] }} (not yet released)</span>{% endif %}</div>{% endfor %}{% endfor %}{% endif %}
+    <div class="note mt"><b>Your pace</b><br>Plan {{ spec.program.weekly_hours }} hours a week. Progress saves as you go.</div>
+  </nav>
+  <div class="lmain">
+    <div class="muted">Module {{ cur.ref }} | screen {{ screen + 1 }} of {{ screens|length }}</div>
+    <h2 style="margin-top:4px">{{ cur.title }}</h2>
+    {% if sc %}<h3>{{ sc.heading }}</h3>{% for b in sc.blocks %}<p>{{ b.text }}{% for c in b.citations %}<span class="cite">{{ c }}</span>{% endfor %}</p>{% endfor %}
+      {% if sc.media %}<div class="note">[{{ sc.media.type }}] {{ sc.media.alt }}</div>{% endif %}
+    {% else %}{% if cur.content.practice %}<h3>Practice</h3><ol>{% for pr in cur.content.practice %}<li>{{ pr.prompt }}</li>{% endfor %}</ol>{% endif %}<h3>Summary</h3><p>{{ cur.content.summary }}</p>{% endif %}
+    <div class="row mt">{% if screen > 0 %}<a class="btn sec" href="?tab=preview&module={{ cur.ref }}&screen={{ screen - 1 }}">Previous</a>{% endif %}
+    {% if screen < screens|length %}<a class="btn" href="?tab=preview&module={{ cur.ref }}&screen={{ screen + 1 }}">Next</a>{% endif %}</div>
+    <div class="card tint mt"><b>Recommended next</b><br>{% set nxt_m = mods|rejectattr(0,'equalto',cur.ref)|list %}{% if nxt_m %}Continue with <a href="?tab=preview&module={{ nxt_m[0][0] }}">{{ nxt_m[0][0] }} {{ nxt_m[0][1] }}</a>, or practice the items you missed.{% else %}You are at the end of the released content.{% endif %}</div>
+  </div>
+  <div class="ltutor">{% include "_tutor.html" %}</div>
+</div>{% endif %}
+
+{% elif tab == 'tutor' %}
+<div class="grid2"><div class="card">{% include "_tutor.html" %}</div>
+<div><h2>How the tutor behaves</h2><ul><li>Answers only from approved, released Module text, and shows the Module and section.</li><li>Socratic mode gives hints, not answers; summative work is declined.</li><li>Out-of-scope and sensitive questions are redirected; there is always a path to a person.</li><li>Its evaluation set runs before every release that changes Modules (Governance).</li></ul>
+<h3>Latest questions</h3><table><tbody>{% for st in asked %}<tr><td>{{ st.learner }}</td><td>{{ st.object_id }}</td><td>{{ st.extra.get('topic') }}</td><td><span class="pill soft">{{ st.extra.get('category', '') }}</span></td></tr>{% else %}<tr><td class="muted">None yet.</td></tr>{% endfor %}</tbody></table></div></div>
+
+{% elif tab == 'integration' %}
+<p class="lead">The engine produces what the delivery platform needs (content package, LTI tool configuration, completion definition) and reads what it emits (xAPI). Live LTI launch, SSO, roster sync and grade passback run in the delivery platform.</p>
+<div class="grid2">
+<div><h2>LTI 1.3 tool configuration</h2>{% if lti %}<pre>{{ json.dumps(lti, indent=1) }}</pre>{% else %}<p class="muted">Generated with the first release.</p>{% endif %}
+<p class="row"><a class="btn sec small" href="/p/{{ p.id }}/doc/integration">Integration Documentation (6.3.3)</a><a class="btn sec small" href="/p/{{ p.id }}/doc/environment">Configured Learning Environment (6.3.1)</a></p></div>
+<div><h2>xAPI statements ({{ n_st }})</h2>
+<p class="muted">Until UMGC learners arrive, a simulated cohort exercises each release; the delivery platform's learning record store sends the same verbs in production.</p>
+<div class="tablewrap" style="max-height:420px"><table><thead><tr><th>Learner</th><th>Verb</th><th>Object</th><th>Result</th></tr></thead><tbody>{% for st in recent %}<tr><td>{{ st.learner }}</td><td>{{ st.verb }}</td><td>{{ st.object_id }}</td><td class="muted">{% if st.result_score is not none %}{{ st.result_score }}{% endif %}{% if st.result_success is not none %} {{ 'success' if st.result_success else 'fail' }}{% endif %}{% if st.duration_min %} {{ st.duration_min }} min{% endif %}</td></tr>{% else %}<tr><td class="muted" colspan="4">No statements yet.</td></tr>{% endfor %}</tbody></table></div>
+<p><a href="/p/{{ p.id }}/reports/xapi.csv">Export all statements (CSV)</a></p></div></div>
+{% endif %}
+{% endblock %}

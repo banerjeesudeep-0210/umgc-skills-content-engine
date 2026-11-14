@@ -1,0 +1,37 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>Admin</h1>
+<p class="lead">Accounts, roles and the system. Every action in the engine checks the signed-in person's role on the server.</p>
+<div class="stats">
+  <div><div class="v">{{ users|selectattr('active')|list|length }}</div><div class="l">active accounts</div></div>
+  <div><div class="v">{{ 'live' if config.LLM_LIVE else 'mock' }}</div><div class="l">Claude API key {{ 'set' if config.LLM_LIVE else 'not set' }}</div></div>
+  <div><div class="v">{{ 'live' if config.LIGHTCAST_LIVE else 'mock' }}</div><div class="l">Lightcast credentials {{ 'set' if config.LIGHTCAST_LIVE else 'not set' }}</div></div>
+  <div><div class="v">{{ workers|length }}</div><div class="l">workers registered</div></div>
+  <div><div class="v">{{ q.get('queued', 0) }} / {{ q.get('running', 0) }} / {{ q.get('failed', 0) }}</div><div class="l">jobs queued / running / failed</div></div>
+</div>
+<h2>Users</h2>
+<table><thead><tr><th>Name</th><th>Username</th><th>Role</th><th>Expertise and credentials</th><th>Last sign-in</th><th>Status</th><th>Change</th></tr></thead><tbody>
+{% for u in users %}<tr><td><b>{{ u.name }}</b><div class="muted">{{ u.email }}</div></td><td>{{ u.username }}</td><td>{{ u.role }}</td><td class="muted">{{ u.expertise }}</td><td class="muted">{{ u.last_login.strftime('%Y-%m-%d %H:%M') if u.last_login else 'never' }}</td>
+<td><span class="pill {{ 'ok' if u.active else 'bad' }}">{{ 'active' if u.active else 'deactivated' }}</span>{% if u.must_change %} <span class="pill warn">must set password</span>{% endif %}</td>
+<td><form method="post" action="/admin/users/{{ u.id }}" class="inline"><label class="sr-only" for="r{{ u.id }}">Role</label><select id="r{{ u.id }}" name="role">{% for r in ROLES %}<option {{ 'selected' if r == u.role }}>{{ r }}</option>{% endfor %}</select>
+<label class="sr-only" for="a{{ u.id }}">Status</label><select id="a{{ u.id }}" name="active"><option value="yes" {{ 'selected' if u.active }}>active</option><option value="no" {{ 'selected' if not u.active }}>deactivated</option></select>
+<label class="sr-only" for="pw{{ u.id }}">Temporary password</label><input id="pw{{ u.id }}" name="reset" type="password" placeholder="New temporary password" autocomplete="new-password" style="width:170px"><button class="small sec">Save</button></form></td></tr>{% endfor %}</tbody></table>
+<details class="mt" open><summary>Create an account</summary>
+<form method="post" action="/admin/users" class="card mt">
+<div class="grid3">
+<div class="field"><label for="nn">Full name</label><input id="nn" name="name" class="w100" required></div>
+<div class="field"><label for="nu">Username</label><input id="nu" name="username" class="w100" required></div>
+<div class="field"><label for="ne">Email</label><input id="ne" type="email" name="email" class="w100"></div>
+<div class="field"><label for="nr">Role</label><select id="nr" name="role" class="w100">{% for r in ROLES %}<option>{{ r }}</option>{% endfor %}</select><div class="help">SMEs are Magic-provided (vendor responsibility). UMGC Reviewers read and comment only.</div></div>
+<div class="field"><label for="np">Temporary password (10 or more characters)</label><input id="np" type="password" name="password" class="w100" minlength="10" required autocomplete="new-password"><div class="help">They must set their own at first sign-in.</div></div>
+<div class="field"><label for="nx">Expertise and credentials (SMEs)</label><input id="nx" name="expertise" class="w100" placeholder="e.g. 12 years SOC operations; CISSP, GCIH"></div>
+</div><button>Create account</button></form></details>
+<h2>Roles and permissions</h2>
+<div class="tablewrap"><table><thead><tr><th>Permission</th>{% for r in ROLES %}<th style="writing-mode:vertical-rl;transform:rotate(180deg);height:160px">{{ r }}</th>{% endfor %}</tr></thead><tbody>
+{% for perm in perms %}<tr><td>{{ LABELS[perm] }}</td>{% for r in ROLES %}<td style="text-align:center">{% if r == 'Administrator' or r in PERMS[perm] %}<span aria-label="yes">&#10003;</span>{% else %}<span class="sr-only">no</span>{% endif %}</td>{% endfor %}</tr>{% endfor %}</tbody></table></div>
+<h2>Workers</h2>
+<table><thead><tr><th>Worker</th><th>Pool</th><th>Queues</th><th>Last seen</th><th>Jobs done</th></tr></thead><tbody>
+{% for w in workers %}<tr><td>{{ w.name }}</td><td>{{ w.pool }}</td><td>{{ w.queues }}</td><td><span class="pill {{ 'ok' if fresh(w) else 'bad' }}">{{ w.last_seen.strftime('%H:%M:%S') }}</span></td><td class="num">{{ w.jobs_done }}</td></tr>{% else %}<tr><td colspan="5" class="muted">No worker has checked in yet.</td></tr>{% endfor %}</tbody></table>
+{% if failed %}<h2>Failed jobs</h2><table><thead><tr><th>Job</th><th>Program</th><th>Task</th><th>Error</th></tr></thead><tbody>{% for j in failed %}<tr><td>{{ j.id }}</td><td>{{ j.program_id }}</td><td>{{ j.task }}</td><td class="muted">{{ j.error[:300] }}</td></tr>{% endfor %}</tbody></table>
+<form method="post" action="/jobs/retry" class="mt"><button>Retry all failed jobs</button></form>{% endif %}
+{% endblock %}

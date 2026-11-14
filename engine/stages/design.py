@@ -13,10 +13,15 @@ from ..db import Program, get_record, log, put_record, session
 
 
 def run(program_id: int, payload: dict):
+    from ..spec import completion_definition, get_spec
     with session() as s:
         p = s.get(Program, program_id)
         brief = dict(p.brief)
         sm = dict(get_record(s, program_id, "skills_map").data)
+        spec = get_spec(s, program_id)
+    weeks = int(spec["program"]["duration_weeks"])
+    weekly = float(spec["program"]["weekly_hours"])
+    n_courses = int(spec["program"].get("courses") or weeks)
     ref = brief.get("reference") or {}
     skills = sm["skills"]
     origin = ""
@@ -29,7 +34,10 @@ def run(program_id: int, payload: dict):
             bp = llm.complete("design.blueprint", "You are an instructional designer drafting a Program Design Blueprint.",
                               f"Skills: {[(s['skill_id'], s['name'], s['tier'], s['competency_id']) for s in skills]}\n"
                               f"Competencies: {[(c['competency_id'], c['name']) for c in sm['competencies']]}\n"
-                              "Draft one Course per competency, 4 to 6 Modules each, a knowledge check and a lab per Course, and a capstone. "
+                              f"The Program runs {weeks} weeks at {weekly} learner hours a week. Draft exactly {n_courses} Courses (UMGC vocabulary: "
+                              f"Program > Course > Module), in teaching order, each about {round(weeks * weekly / n_courses, 1)} learner hours, 4 to 6 Modules each, "
+                              "a knowledge check and a persistent lab or applied exercise per Course, and a capstone in the last Course. "
+                              "Every Core skill must be measured at least twice, once in a performance task. "
                               'Return {"objectives":[{"objective_id":"1.1","level":"module objective","statement":"","bloom_level":"","competency_id":"C1","skill_ids":[],"module_ids":[]}],'
                               '"courses":[{"course_id":"CRS1","name":"","learner_hours":10,"online_hours":4,"reading_hours":2,"practice_hours":4,"assessment_ids":[],'
                               '"modules":[{"module_id":"1.1","title":"","type":"lesson","objective_ids":[],"skill_ids":[],"assessment_ids":[]}]}],'
@@ -39,8 +47,8 @@ def run(program_id: int, payload: dict):
                               program_id=program_id, want_json=True, max_tokens=12000)
             origin = "Claude draft" if bp else ""
         if not bp:
-            bp = _template_blueprint(sm)
-            origin = "Template draft (mock mode)"
+            bp = _template_blueprint(sm, n_courses, weeks * weekly)
+            origin = f"Template draft (mock mode): {n_courses} Courses over {weeks} weeks"
 
     # sprint plan: first half of the Courses in Sprint 1, the rest in Sprint 2; first Module is the prototype
     courses = bp["courses"]
@@ -56,8 +64,9 @@ def run(program_id: int, payload: dict):
     bp["coverage"] = coverage_rules(skills, bp)
     bp["dag"] = dag_check(bp["prerequisites"])
     bp["seat_time"] = seat_time(courses)
-    bp["completion_definition"] = ("Finish all required Modules, pass the summative assessment at 80 percent or higher within three attempts, "
-                                   "and submit the capstone. Completion is measured at 100 and 150 percent of expected time.")
+    bp["completion_definition"] = completion_definition(spec)
+    bp["spec_snapshot"] = {"duration_weeks": weeks, "weekly_hours": weekly, "courses": n_courses, "total_hours": round(weeks * weekly, 1)}
+    finalize(bp)
     bp["origin"] = origin
     with session() as s:
         put_record(s, program_id, "blueprint", "main", bp, status="proposed")
@@ -141,33 +150,55 @@ def seat_time(courses):
     return {"rows": rows, "total_hours": round(sum(r["total"] for r in rows), 1)}
 
 
-def _template_blueprint(sm):
+def finalize(bp):
+    """Asset properties UMGC asked for (Q&A): labs persist between sessions; graded work auto-grades to at least pass/fail."""
+    for a in bp["assessments"]:
+        a.setdefault("auto_grade", "score" if a.get("type") in ("knowledge check", "practice exam") else "pass/fail")
+        a["persistent_state"] = a.get("type") in ("lab", "capstone", "applied exercise") or bool(a.get("performance_task"))
+        a["graded"] = True
+    for c in bp["courses"]:
+        for m in c["modules"]:
+            m.setdefault("minutes", round((c.get("learner_hours") or 0) * 60 / max(1, len(c["modules"]))))
+    return bp
+
+
+def _template_blueprint(sm, n_courses=None, total_hours=None):
+    """One Course per week: skills are spread across the Courses in competency order; each Course gets a knowledge check
+    and a lab, and the last Course carries a capstone that measures every Core skill again."""
+    skills = sorted(sm["skills"], key=lambda s: (s.get("competency_id", ""), s["skill_id"]))
+    n = max(1, int(n_courses or len({s.get("competency_id") for s in skills}) or 1))
+    per = max(1, -(-len(skills) // n))
+    chunks = [skills[i * per:(i + 1) * per] for i in range(n)]
+    hours = round((total_hours or n * 10) / n, 1)
+    comps = {c["competency_id"]: c for c in sm.get("competencies", [])}
     objectives, courses, assessments, prereqs = [], [], [], []
-    skills_by_c = defaultdict(list)
-    for s in sm["skills"]:
-        skills_by_c[s["competency_id"]].append(s)
-    for ci, comp in enumerate(sm["competencies"], 1):
-        sks = skills_by_c[comp["competency_id"]]
+    for ci, sks in enumerate(chunks, 1):
         cid = f"CRS{ci}"
+        cname = ", ".join(dict.fromkeys(comps.get(s.get("competency_id"), {}).get("name", "") for s in sks if s)) or f"Course {ci}"
         mods = []
         for j, sk in enumerate(sks, 1):
             oid = f"{ci}.{j}"
             objectives.append({"objective_id": oid, "level": "module objective", "statement": sk["statement"], "bloom_level": "Apply",
-                               "competency_id": comp["competency_id"], "skill_ids": [sk["skill_id"]], "module_ids": [oid]})
-            mods.append({"module_id": oid, "title": f"Lesson {oid}: {sk['name']}", "type": "lesson", "objective_ids": [oid],
-                         "skill_ids": [sk["skill_id"]], "assessment_ids": []})
-        mods.append({"module_id": f"{ci}.{len(sks) + 1}", "title": f"Applied lab: {comp['name']}", "type": "lab",
-                     "objective_ids": [o["objective_id"] for o in objectives if o["competency_id"] == comp["competency_id"]],
-                     "skill_ids": [s["skill_id"] for s in sks], "assessment_ids": [f"LAB{ci}"]})
+                               "competency_id": sk.get("competency_id"), "skill_ids": [sk["skill_id"]], "module_ids": [oid]})
+            mods.append({"module_id": oid, "title": f"{sk['name']}", "type": "lesson", "objective_ids": [oid], "skill_ids": [sk["skill_id"]], "assessment_ids": []})
         ids = [s["skill_id"] for s in sks]
+        lab_mod = f"{ci}.{len(sks) + 1}"
+        mods.append({"module_id": lab_mod, "title": f"Applied lab: Week {ci}", "type": "lab", "objective_ids": [m["module_id"] for m in mods],
+                     "skill_ids": ids, "assessment_ids": [f"LAB{ci}"]})
         assessments += [
             {"assessment_id": f"KC{ci}", "name": f"Knowledge Check {ci}", "type": "knowledge check", "course_id": cid, "auto_grade": "score",
              "items_count": max(5, len(ids) * 2), "rubric_rows": 0, "objective_ids": [m["module_id"] for m in mods[:-1]], "measured": ids,
              "practiced": [], "performance_task": False},
             {"assessment_id": f"LAB{ci}", "name": f"Lab {ci}", "type": "lab", "course_id": cid, "auto_grade": "pass/fail", "items_count": 1,
-             "rubric_rows": 4, "objective_ids": [m["module_id"] for m in mods[:-1]], "measured": ids, "practiced": [], "performance_task": True}]
-        courses.append({"course_id": cid, "name": f"Course {ci}: {comp['name']}", "learner_hours": 10, "online_hours": 4,
-                        "reading_hours": 2, "practice_hours": 4, "assessment_ids": [f"KC{ci}", f"LAB{ci}"], "modules": mods})
+             "rubric_rows": len(ids), "objective_ids": [m["module_id"] for m in mods[:-1]], "measured": ids, "practiced": [], "performance_task": True}]
+        courses.append({"course_id": cid, "name": f"Week {ci}: {cname}"[:120], "learner_hours": hours, "online_hours": round(hours * 0.35, 1),
+                        "reading_hours": round(hours * 0.2, 1), "practice_hours": round(hours * 0.45, 1), "assessment_ids": [f"KC{ci}", f"LAB{ci}"], "modules": mods})
         if ci > 1:
-            prereqs.append({"from_id": f"CRS{ci - 1}", "to_id": cid, "relation_type": "course_sequence", "rationale": "Sequenced release"})
+            prereqs.append({"from_id": f"CRS{ci - 1}", "to_id": cid, "relation_type": "course_sequence", "rationale": "Weekly release order"})
+    core = [s["skill_id"] for s in skills if s.get("tier") == "Core"]
+    if courses:
+        assessments.append({"assessment_id": "CAPT", "name": "Program Capstone", "type": "capstone", "course_id": courses[-1]["course_id"],
+                            "auto_grade": "pass/fail", "items_count": 1, "rubric_rows": len(core), "objective_ids": [o["objective_id"] for o in objectives],
+                            "measured": core, "practiced": [], "performance_task": True})
+        courses[-1]["assessment_ids"].append("CAPT")
     return {"objectives": objectives, "courses": courses, "assessments": assessments, "prerequisites": prereqs, "credentials": []}

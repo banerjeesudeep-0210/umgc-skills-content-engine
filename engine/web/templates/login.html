@@ -1,0 +1,29 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sign in | UMGC Skills Content Engine</title>
+<link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="/static/app.css"></head>
+<body><main id="main" class="login">
+<div class="brand"><span class="mark" aria-hidden="true" style="color:#fff">M</span><span>Skills Content Engine<small>UMGC RFP 92303 | Magic AI POD</small></span></div>
+{% if flash %}<div class="flash" role="status">{{ flash }}</div>{% endif %}
+{% if err %}<div class="error" role="alert">{{ err }}</div>{% endif %}
+{% if first and not bootstrap %}
+<h1>Create the administrator</h1>
+<p class="muted">No accounts exist yet. The first account is the Administrator, who then creates accounts for the Magic team, SMEs and UMGC reviewers.</p>
+<form method="post" action="/first-run">
+  <div class="field"><label for="n">Your name</label><input id="n" name="name" class="w100" required autocomplete="name"></div>
+  <div class="field"><label for="u">Username</label><input id="u" name="username" class="w100" required autocomplete="username"></div>
+  <div class="field"><label for="pw">Password (10 or more characters)</label><input id="pw" type="password" name="password" class="w100" minlength="10" required autocomplete="new-password"></div>
+  <button class="w100">Create administrator</button>
+</form>
+{% else %}
+<h1>Sign in</h1>
+<form method="post" action="/login">
+  <input type="hidden" name="next" value="{{ next }}">
+  <div class="field"><label for="u">Username</label><input id="u" name="username" class="w100" required autocomplete="username" autofocus></div>
+  <div class="field"><label for="pw">Password</label><input id="pw" type="password" name="password" class="w100" required autocomplete="current-password"></div>
+  <button class="w100">Sign in</button>
+</form>
+{% if first and bootstrap %}<p class="note">First sign-in: use username <b>admin</b> and the APP_PASSWORD set in Render. You then create accounts for everyone else in Admin.</p>{% endif %}
+{% endif %}
+<p class="muted mt">Access is by named account. Every save, comment and decision is recorded with your name and role.</p>
+</main></body></html>

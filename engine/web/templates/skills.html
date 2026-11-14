@@ -1,48 +1,96 @@
 {% extends "base.html" %}
+{% from "_collab.html" import grid as gridm, lockbar, gatebox %}
+{% block head %}{% if not sm and tab != 'sources' %}<meta http-equiv="refresh" content="5">{% endif %}{% endblock %}
 {% block body %}
-{% if not sm %}<p>The skills worker is drafting the map. This page refreshes when it is ready.</p><meta http-equiv="refresh" content="4">{% else %}
-<div class="band">
-  <div><div class="v">{{ sm.skills|length }}</div><div class="l">skills in the catalog</div></div>
+{% if tab == 'sources' %}
+<p class="lead">The source pack: everything Lightcast extracts skills from and everything AI drafting may draw on. A Magic SME or the Learning Experience Architect approves each uploaded source before AI uses it. Pack version <b>{{ pack_version }}</b>.</p>
+<table><thead><tr><th>Source</th><th>Title</th><th>Type</th><th>Added by</th><th>Size</th><th>Lightcast skills</th><th>Status</th></tr></thead><tbody>
+{% for x in brief_srcs %}<tr><td>{{ x.id }}</td><td>{{ x.title }}</td><td>{{ x.type }}</td><td class="muted">Task Order brief</td><td class="num">{{ x.text|length }}</td><td class="muted">in the skills map extraction log</td><td><span class="pill ok">approved (brief)</span></td></tr>{% endfor %}
+{% for x in srcs %}<tr><td><a href="/p/{{ p.id }}/sources/{{ x.source_id }}">{{ x.source_id }}</a></td><td>{{ x.title }}</td><td>{{ x.source_type }}</td><td>{{ x.uploaded_by }}</td><td class="num">{{ x.chars }}</td><td class="num">{{ x.skills|length }}</td>
+<td><span class="pill {{ 'ok' if x.status=='approved' else ('bad' if x.status=='excluded' else 'warn') }}">{{ x.status }}</span></td></tr>{% endfor %}
+{% if not brief_srcs and not srcs %}<tr><td colspan="7" class="muted">No sources yet. Upload the credential exam objectives, UMGC program outcomes and job postings.</td></tr>{% endif %}
+</tbody></table>
+{% if can('source.upload') %}
+<div class="grid2 mt">
+<form method="post" action="/p/{{ p.id }}/sources/upload" enctype="multipart/form-data" class="card">
+  <h3>Upload files</h3><p class="muted">PDF, Word, PowerPoint, Excel, text, HTML or Markdown.</p>
+  <div class="field"><label for="uf">Files</label><input id="uf" type="file" name="files" multiple required></div>
+  <div class="grid3"><div class="field"><label for="ut">Type</label><select id="ut" name="source_type"><option>UMGC material</option><option>Credential exam objectives</option><option>Job postings</option><option>SME reference</option><option>Employer input</option><option>Open educational resource</option></select></div>
+  <div class="field"><label for="uo">Owner</label><select id="uo" name="owner"><option>UMGC</option><option>Magic</option><option>Third party</option></select></div>
+  <div class="field"><label for="ul">License or permission</label><input id="ul" name="license_note" placeholder="e.g. UMGC-owned; CC BY 4.0"></div></div>
+  <button>Upload and ingest</button></form>
+<form method="post" action="/p/{{ p.id }}/sources/paste" class="card">
+  <h3>Paste text</h3>
+  <div class="field"><label for="pt">Title</label><input id="pt" name="title" class="w100" required></div>
+  <div class="field"><label for="px">Text</label><textarea id="px" name="text" rows="6" required></textarea></div>
+  <div class="grid3"><div class="field"><label for="ptt">Type</label><select id="ptt" name="source_type"><option>SME reference</option><option>UMGC material</option><option>Job postings</option><option>Employer input</option></select></div>
+  <div class="field"><label for="po">Owner</label><select id="po" name="owner"><option>Magic</option><option>UMGC</option><option>Third party</option></select></div>
+  <div class="field"><label for="pl">License</label><input id="pl" name="license_note"></div></div>
+  <button>Add source</button></form>
+</div>{% endif %}
+
+{% elif not sm %}
+<div class="card tint">The skills worker is drafting the skills map from the source pack with Lightcast. This page refreshes when it is ready.</div>
+
+{% elif tab == 'map' %}
+<div class="stats">
+  <div><div class="v">{{ sm.skills|length }}</div><div class="l">skills</div></div>
   <div><div class="v">{{ sm.skills|selectattr('resolution_status','equalto','resolved')|list|length }}</div><div class="l">resolved to one Lightcast ID</div></div>
-  <div><div class="v">{{ sm.competencies|length }}</div><div class="l">competencies</div></div>
   <div><div class="v">{{ sm.skills|selectattr('tier','equalto','Core')|list|length }}</div><div class="l">Core skills</div></div>
-  <div><div class="v">{{ sm.taxonomy_version }}</div><div class="l">Lightcast taxonomy version</div></div>
+  <div><div class="v" style="font-size:16px">{{ sm.taxonomy_version }}</div><div class="l">Lightcast taxonomy ({{ sm.lightcast_mode }})</div></div>
   <div><div class="v">{{ sm.demand_mode }}</div><div class="l">Job Postings Analytics</div></div>
 </div>
-<div class="grid g3" style="margin-top:14px">
-  <div class="card c0"><h3>Occupation (Lightcast LOT)</h3><div class="kv">
-    <div>Title</div><div>{{ sm.occupation.title }}</div><div>LOT occupation</div><div>{{ sm.occupation.lot_occupation_name }} <span class="muted">{{ sm.occupation.lot_occupation_id }}</span></div>
-    <div>Specialized</div><div>{{ sm.occupation.lot_specialized_occupation_name }}</div><div>SOC crosswalk</div><div>{{ sm.occupation.soc_crosswalk or '' }}</div>
-    <div>Postings, 12 months</div><div>MD {{ sm.demand_total_md or 'at Discovery' }} | US {{ sm.demand_total_us or 'at Discovery' }}</div></div></div>
-  <div class="card c1"><h3>How each skill was scored</h3><p>Priority = 40 percent demand (JPA share of postings, normalized 0 to 5) + 30 percent SME criticality + 20 percent credential weight (mentions in the exam objectives) + 10 percent entry-level fit. Core 3.5 and up, Supporting 2.5 to 3.4, Awareness below 2.5.</p><p class="muted">{{ sm.catalog_origin }}</p></div>
-  <div class="card c2"><h3>Employer validation</h3>
-    {% if sm.employers %}<p>Validated by: {{ sm.employers|join('; ') }}</p>{% else %}
-    <form method="post" action="/p/{{p.id}}/employers"><p><input name="e1" placeholder="Employer 1 (Maryland)" style="width:100%"></p><p><input name="e2" placeholder="Employer 2" style="width:100%"></p><p><input name="e3" placeholder="Employer 3 or UMGC nominee" style="width:100%"></p><p><input name="by" value="{{ me.name }}" placeholder="Recorded by (LXA)" required> <button>Record validation</button></p></form>{% endif %}</div>
+{{ lockbar(lock, 'skills', p, can('skills.reopen')) }}
+<p class="muted">Work in the grid as you would in a shared spreadsheet: change a statement, tier or competency, add or remove a skill. Typing a new Lightcast skill name re-resolves it to a Lightcast ID and pulls its demand; priority recomputes. {% if lock.gate_status == 'pending' %}<b>Gate 1 is open with UMGC</b>; edits made now are what UMGC sees.{% endif %}</p>
+{{ gridm(grid, 'Skills map grid', 'Add skill') }}
+<details class="mt"><summary>How skills map to Lightcast, and how each is scored</summary>
+<div class="grid2 mt">
+<div class="card tint"><h3>Lightcast fields used</h3><table><tbody>
+<tr><td>Occupation</td><td>Titles API normalize to LOT occupation ID; LOT specialized occupation</td></tr>
+<tr><td>Extraction</td><td>Skills API <code>/extract/trace</code>: skill ID, name, confidence, surface form and character span in each source</td></tr>
+<tr><td>Resolution</td><td>Skills API search: <code>id</code>, <code>name</code>, <code>type.name</code>, <code>category.name</code>, <code>subcategory.name</code>, <code>infoUrl</code></td></tr>
+<tr><td>Demand</td><td>Job Postings Analytics rankings by skill: unique postings (Maryland and US), share of postings, significance</td></tr>
+<tr><td>Version</td><td>Taxonomy version and retrieval date stamped on every skill</td></tr></tbody></table></div>
+<div class="card tint"><h3>Priority score</h3><p>40 percent demand (share of postings, normalized 0 to 5) + 30 percent SME criticality + 20 percent credential weight (mentions in the exam objectives) + 10 percent entry-level fit. Core 3.5 and up, Supporting 2.5 to 3.4, Awareness below 2.5. Without licensed demand the other three are reweighted.</p><p class="muted">{{ sm.catalog_origin }}</p></div>
 </div>
-<h2>Source pack extraction (Lightcast extract/trace)</h2>
-<table><tr><th>Source</th><th>Title</th><th>Characters</th><th>Skills found</th><th>Mentions with spans</th></tr>
-{% for x in sm.extraction_log %}<tr><td>{{ x.source_id }}</td><td>{{ x.title }}</td><td>{{ x.chars }}</td><td>{{ x.skills_found }}</td><td>{{ x.mentions }}</td></tr>{% endfor %}</table>
-<h2>Skills map</h2>
-<p class="muted">Every row is a Lightcast Open Skills record. Click a skill to see the trace or edit it as the SME.</p>
-<div style="overflow:auto;max-height:70vh"><table>
-<tr><th>ID</th><th>Lightcast skill</th><th>Lightcast ID</th><th>Type / subcategory</th><th>Statement</th><th>Comp.</th><th>Tier</th><th>Exit</th><th>MD postings</th><th>Share</th><th>Cred. wt</th><th>SME</th><th>Priority</th><th>Resolution</th><th>Source span</th><th>Taught / assessed</th><th></th></tr>
-{% for k in sm.skills %}{% set t = tm.get(k.skill_id, {}) %}
-<tr><td><a href="/p/{{p.id}}/trace?skill={{ k.skill_id }}">{{ k.skill_id }}</a></td><td><b>{{ k.lightcast_skill_name or k.name }}</b></td>
-<td class="muted">{{ k.lightcast_skill_id }}</td><td class="muted">{{ k.skill_type }}<br>{{ k.subcategory }}</td><td style="min-width:240px">{{ k.statement }}</td><td>{{ k.competency_id }}</td>
-<td><span class="pill {{ 'p' if k.tier=='Core' else '' }}">{{ k.tier }}</span>{% if k.tier != k.tier_from_score %}<div class="muted">score says {{ k.tier_from_score }}</div>{% endif %}</td><td>{{ k.exit_level }}</td>
-<td>{{ k.unique_postings_md if k.unique_postings_md is not none else 'Discovery' }}</td><td>{{ k.postings_share_pct if k.postings_share_pct is not none else '' }}</td><td>{{ k.credential_weight }}</td><td>{{ k.sme_criticality }}</td><td><b>{{ k.priority_score }}</b></td>
-<td><span class="pill {{ 'ok' if k.resolution_status=='resolved' else 'warn' }}">{{ k.resolution_status }}</span> <span class="muted">{{ k.resolution_score }}</span>{% if k.alternatives %}<div class="muted">alt: {{ k.alternatives|join('; ') }}</div>{% endif %}</td>
-<td class="muted" style="min-width:180px">{% for sp in k.source_spans[:2] %}{{ sp.source_id }} [{{ sp.start }}:{{ sp.end }}] "...{{ sp.context }}..."<br>{% endfor %}</td>
-<td class="muted">{{ t.get('taught_in', [])|join(', ') }}<br>{% if t %}assessed {{ t.times_assessed }}x{% endif %}</td>
-<td><details><summary>Edit</summary><form method="post" action="/p/{{p.id}}/skills/edit" style="min-width:260px"><input type="hidden" name="skill_id" value="{{ k.skill_id }}">
-<textarea name="statement" rows="2">{{ k.statement }}</textarea><select name="tier"><option>{{ k.tier }}</option><option>Core</option><option>Supporting</option><option>Awareness</option></select>
-<input name="sme_criticality" type="number" min="1" max="5" value="{{ k.sme_criticality }}" style="width:60px"><input name="lightcast_skill_id" value="{{ k.lightcast_skill_id }}" placeholder="Lightcast ID"><input name="by" value="{{ me.name }}" placeholder="SME name"><button>Save</button></form></details></td></tr>
-{% endfor %}</table></div>
-<h2>Competencies</h2>
-<table><tr><th>ID</th><th>Name</th><th>Definition</th><th>Exit level</th><th>Performance criteria</th><th>Evidence</th><th>Skills</th></tr>
-{% for c in sm.competencies %}<tr><td>{{ c.competency_id }}</td><td><b>{{ c.name }}</b></td><td>{{ c.definition }}</td><td>{{ c.exit_level }}</td><td>{{ c.performance_criteria }}</td><td>{{ c.evidence }}</td><td>{{ c.skill_ids|join(', ') }}</td></tr>{% endfor %}</table>
-{% if sm.candidates_not_in_catalog %}<h2>Candidates in the sources but not in the catalog</h2>
-<p>{% for c in sm.candidates_not_in_catalog %}<span class="pill">{{ c.name }} ({{ c.mentions }})</span> {% endfor %}</p>{% endif %}
-{% if sm.last_refresh %}<h2>Last quarterly refresh</h2><pre>{{ json.dumps(sm.last_refresh, indent=1) }}</pre>{% endif %}
+<div class="tablewrap mt"><table><thead><tr><th>ID</th><th>Lightcast skill</th><th>ID</th><th>Type / subcategory</th><th>MD postings</th><th>Share</th><th>Cred. weight</th><th>Priority</th><th>Score says</th><th>Alternatives</th><th>Source span</th><th>Taught / assessed</th></tr></thead><tbody>
+{% for k in sm.skills %}{% set t = tm.get(k.skill_id, {}) %}<tr><td><a href="/p/{{ p.id }}/trace?skill={{ k.skill_id }}">{{ k.skill_id }}</a></td><td>{{ k.lightcast_skill_name or k.name }}</td><td class="muted">{{ k.lightcast_skill_id }}</td><td class="muted">{{ k.skill_type }}<br>{{ k.subcategory }}</td>
+<td class="num">{{ k.unique_postings_md if k.unique_postings_md is not none else 'pending' }}</td><td class="num">{{ k.postings_share_pct if k.postings_share_pct is not none else '' }}</td><td class="num">{{ k.credential_weight }}</td><td class="num"><b>{{ k.priority_score }}</b></td><td>{{ k.tier_from_score }}</td>
+<td class="muted">{{ (k.alternatives or [])|join('; ') }}</td><td class="muted">{% for sp in (k.source_spans or [])[:2] %}{{ sp.source_id }} [{{ sp.start }}:{{ sp.end }}] "{{ sp.surface_form }}"<br>{% else %}{{ k.sme_status }}{% endfor %}</td>
+<td class="muted">{{ t.get('taught_in', [])|join(', ') }}{% if t %}<br>assessed {{ t.times_assessed }}x{% endif %}</td></tr>{% endfor %}</tbody></table></div>
+</details>
+
+{% elif tab == 'competencies' %}
+{{ lockbar(lock, 'skills', p, can('skills.reopen')) }}
+<p class="muted">Competencies group the skills and set the exit level and evidence. Skills are assigned to a competency in the Skills map grid.</p>
+{{ gridm(grid, 'Competencies grid', 'Add competency') }}
+
+{% elif tab == 'validation' %}
+<div class="grid2">
+<div>
+  <h2>Employer validation</h2>
+  {% set eg = gates.get('magic.employers') %}
+  {% if sm.employers %}<div class="card tint"><b>Validated by</b><ul>{% for e in sm.employers %}<li>{{ e }}</li>{% endfor %}</ul>{% if sm.employer_notes %}<p class="muted">{{ sm.employer_notes }}</p>{% endif %}{% if eg %}<p class="muted">Recorded by {{ eg.decided_by }}</p>{% endif %}</div>
+  {% elif can('employers.record') %}
+  <form method="post" action="/p/{{ p.id }}/employers" class="card">
+    <p class="muted">Three employers (Maryland-based where available) confirm the skills and levels reflect the job.</p>
+    {% for i in [1,2,3] %}<div class="grid2"><div class="field"><label for="e{{i}}">Employer {{ i }}</label><input id="e{{i}}" name="e{{i}}" class="w100" required></div><div class="field"><label for="e{{i}}w">Reviewer (name, title)</label><input id="e{{i}}w" name="e{{i}}_who" class="w100"></div></div>{% endfor %}
+    <div class="field"><label for="en">What they changed or confirmed</label><textarea id="en" name="notes" rows="2"></textarea></div>
+    <button>Record employer validation</button></form>
+  {% else %}<p class="muted">The Learning Experience Architect records employer validation.</p>{% endif %}
+  <h2>Gate 1: UMGC approves the skills map</h2>
+  {{ gatebox(gates.get('umgc.skills_map'), p, '/p/' ~ p.id ~ '/skills?tab=validation', can('gate.umgc')) }}
+  <p class="muted mt">UMGC reviews the <a href="/p/{{ p.id }}/skills?tab=map">skills map</a> and <a href="/p/{{ p.id }}/skills?tab=competencies">competencies</a> here; reviewers can comment on the record. Approval locks the map; a recorded reopen sends it back to Gate 1.</p>
+</div>
+<div>
+  <h2>Extraction from the source pack</h2>
+  <table><thead><tr><th>Source</th><th>Title</th><th>Characters</th><th>Skills</th><th>Mentions</th></tr></thead><tbody>
+  {% for x in sm.extraction_log %}<tr><td>{{ x.source_id }}</td><td>{{ x.title }}</td><td class="num">{{ x.chars }}</td><td class="num">{{ x.skills_found }}</td><td class="num">{{ x.mentions }}</td></tr>{% endfor %}</tbody></table>
+  <h2>Occupation</h2>
+  <div class="kv"><div>Title</div><div>{{ sm.occupation.title }}</div><div>LOT occupation</div><div>{{ sm.occupation.lot_occupation_name }} <span class="muted">{{ sm.occupation.lot_occupation_id }}</span></div>
+  <div>Specialized</div><div>{{ sm.occupation.lot_specialized_occupation_name or 'not set' }}</div><div>Postings, 12 months</div><div>Maryland {{ sm.demand_total_md or 'pending license' }} | US {{ sm.demand_total_us or 'pending license' }}</div></div>
+  {% if sm.candidates_not_in_catalog %}<h2>In the sources but not in the map</h2><p>{% for c in sm.candidates_not_in_catalog %}<span class="pill soft">{{ c.name }} ({{ c.mentions }})</span> {% endfor %}</p><p class="muted">Add any of these in the Skills map grid by typing its name.</p>{% endif %}
+</div>
+</div>
 {% endif %}
 {% endblock %}

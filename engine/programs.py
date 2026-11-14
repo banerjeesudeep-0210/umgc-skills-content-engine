@@ -26,8 +26,14 @@ def create_program(brief: dict) -> int:
     return pid
 
 
-def new_brief(name, occupation_title, lot_name, specialized, credential, sources: list[dict]) -> dict:
-    return {"name": name, "sample": False,
+def new_brief(name, occupation_title, lot_name, specialized, credential, sources: list[dict], duration_weeks=5, weekly_hours=10.0, courses=None,
+              subject_area="", audience="", start_date="", task_order="", required_modules="", assessment_requirements="") -> dict:
+    """A Task Order brief. Duration (weeks), weekly learner hours and the number of Courses drive the Blueprint:
+    by default one Course per week, sized to the weekly hours."""
+    weeks = max(1, min(52, int(duration_weeks or 5)))
+    return {"name": name, "sample": False, "task_order": task_order or "", "subject_area": subject_area, "audience": audience,
+            "duration_weeks": weeks, "weekly_hours": float(weekly_hours or 10), "courses": int(courses or weeks), "start_date": start_date or None,
+            "required_modules": required_modules, "assessment_requirements": assessment_requirements,
             "occupation": {"title": occupation_title, "lot_occupation_name": lot_name or occupation_title,
                            "lot_specialized_occupation_name": specialized or "", "geography": "Maryland, with national comparison",
                            "experience_band": "0-2 years"},

@@ -1,0 +1,40 @@
+{% extends "base.html" %}
+{% block body %}
+<h1>AI governance</h1>
+<p class="lead">How AI is used across every Program: which models, which prompts at which version, how they are tested before and after change, how incidents are handled, and where data goes (RFP Attachment A 9 to 11; Technical Proposal 2.3).</p>
+<h2>Models and services</h2>
+<table><thead><tr><th>Model or service</th><th>Provider</th><th>Used for</th><th>Mode</th><th>Data sent</th><th>Retention</th><th>Status</th></tr></thead><tbody>
+{% for m in models %}<tr><td><b>{{ m.name }}</b></td><td>{{ m.provider }}</td><td>{{ m.use }}</td><td><span class="pill {{ 'ok' if m.mode.startswith('live') else 'warn' }}">{{ m.mode }}</span></td><td>{{ m.data }}</td><td>{{ m.retention }}</td><td>{{ m.status }}<div class="muted">{{ m.approved_by }}</div></td></tr>{% endfor %}</tbody></table>
+<h2>Prompt register</h2>
+<p class="muted">Every AI call is logged with its prompt ID and version; every asset revision records them. A version change must pass the release check before use.</p>
+<table><thead><tr><th>Prompt</th><th>Version</th><th>Stage</th><th>Purpose</th><th>Release check</th><th>Calls</th><th>Owner and notes</th></tr></thead><tbody>
+{% for pr in prompts %}<tr><td><code>{{ pr.prompt_id }}</code></td><td>{{ pr.version }}</td><td>{{ pr.stage }}</td><td>{{ pr.purpose }}</td><td>{{ pr.release_check }}</td><td class="num">{{ pr.calls }}</td>
+<td>{% if can('governance.edit') %}<form method="post" action="/governance/prompt" class="inline"><input type="hidden" name="prompt_id" value="{{ pr.prompt_id }}"><label class="sr-only" for="o-{{ loop.index }}">Owner</label><input id="o-{{ loop.index }}" name="owner" value="{{ pr.owner }}" style="width:150px"><label class="sr-only" for="n-{{ loop.index }}">Notes</label><input id="n-{{ loop.index }}" name="notes" value="{{ pr.notes }}" placeholder="Notes"><button class="small sec">Save</button></form>{% else %}{{ pr.owner }}<div class="muted">{{ pr.notes }}</div>{% endif %}</td></tr>{% endfor %}</tbody></table>
+<div class="grid2">
+<div><h2>Evaluation sets</h2><table><thead><tr><th>Set</th><th>When</th><th>Cases</th><th>Threshold</th></tr></thead><tbody>
+{% for e in eval_sets %}<tr><td>{{ e.set }}</td><td>{{ e.scope }}</td><td>{{ e.cases }}</td><td>{{ e.threshold }}</td></tr>{% endfor %}</tbody></table></div>
+<div><h2>Evaluation runs</h2><table><thead><tr><th>Program</th><th>Release</th><th>Passed</th><th>By category</th><th>Result</th></tr></thead><tbody>
+{% for r in eval_runs %}<tr><td>{{ r.program }}</td><td>{{ r.release }}</td><td>{{ r.passed }}/{{ r.total }}</td><td class="muted">{{ r.by_category }}</td><td><span class="pill {{ 'ok' if r.result=='pass' else 'bad' }}">{{ r.result }}</span></td></tr>
+{% else %}<tr><td colspan="5" class="muted">The tutor evaluation set runs when a release is built.</td></tr>{% endfor %}</tbody></table></div>
+</div>
+<h2>Incidents</h2>
+<p class="muted">Report, triage, contain, correct, communicate. Anyone can report; the AI Governance Lead or Content Quality Owner resolves.</p>
+<table><thead><tr><th>ID</th><th>Incident</th><th>Severity</th><th>Where</th><th>Reported</th><th>Status</th><th>Resolution</th></tr></thead><tbody>
+{% for i in incidents|reverse %}<tr><td>{{ i.id }}</td><td><b>{{ i.title }}</b><div class="muted">{{ i.detail }}</div></td><td>{{ i.severity }}</td><td>{{ i.program }} {{ i.asset }}</td><td>{{ i.reported_by }}<div class="muted">{{ i.reported_at }}</div></td>
+<td><span class="pill {{ 'warn' if i.status=='open' else 'ok' }}">{{ i.status }}</span></td>
+<td>{% if i.status == 'open' and can('incident.manage') %}<form method="post" action="/governance/incident/resolve" class="inline"><input type="hidden" name="iid" value="{{ i.id }}"><label class="sr-only" for="res-{{ i.id }}">Resolution</label><input id="res-{{ i.id }}" name="resolution" placeholder="Containment and correction" required><button class="small">Resolve</button></form>{% else %}{{ i.resolution }}{% endif %}</td></tr>
+{% else %}<tr><td colspan="7" class="muted">No incidents reported.</td></tr>{% endfor %}</tbody></table>
+<details class="mt"><summary>Report an incident</summary>
+<form method="post" action="/governance/incident" class="card mt">
+<div class="grid4"><div class="field"><label for="it">What happened</label><input id="it" name="title" class="w100" required></div>
+<div class="field"><label for="isv">Severity</label><select id="isv" name="severity"><option>low</option><option selected>moderate</option><option>high</option><option>critical</option></select></div>
+<div class="field"><label for="ip">Program</label><select id="ip" name="program"><option value="">All</option>{% for p_ in progs %}<option>{{ p_.name }}</option>{% endfor %}</select></div>
+<div class="field"><label for="ia">Asset or release</label><input id="ia" name="asset" placeholder="e.g. M-3.2 or tutor"></div></div>
+<div class="field"><label for="idt">Detail</label><textarea id="idt" name="detail" rows="3"></textarea></div><button>Report</button></form></details>
+<div class="grid2">
+<div><h2>Data handling</h2><ul>{% for h in handling %}<li>{{ h }}</li>{% endfor %}</ul></div>
+<div><h2>Subprocessors</h2><table><thead><tr><th>Service</th><th>Role</th><th>Data</th><th>Region</th></tr></thead><tbody>{% for x in subs %}<tr><td>{{ x.name }}</td><td>{{ x.role }}</td><td>{{ x.data }}</td><td>{{ x.region }}</td></tr>{% endfor %}</tbody></table></div>
+</div>
+<h2>Change log</h2>
+<table><thead><tr><th>When</th><th>Who</th><th>Change</th></tr></thead><tbody>{% for c in changes %}<tr><td class="muted">{{ c.at }}</td><td>{{ c.by }}</td><td>{{ c.change }}</td></tr>{% endfor %}</tbody></table>
+{% endblock %}

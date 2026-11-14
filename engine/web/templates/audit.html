@@ -1,0 +1,25 @@
+{% extends "base.html" %}
+{% block body %}
+{% if tab == 'activity' %}
+<p class="lead">Every action by a person or a worker, newest first. Gate decisions, edits, submissions, uploads and releases are all here with who and when.</p>
+<div class="tablewrap" style="max-height:60vh"><table><thead><tr><th>When</th><th>Who</th><th>Stage</th><th>What</th></tr></thead><tbody>
+{% for e in events %}<tr><td class="muted" style="white-space:nowrap">{{ e.at.strftime('%Y-%m-%d %H:%M:%S') }}</td><td>{{ e.actor }}</td><td>{{ e.stage }}</td><td>{{ e.message }}</td></tr>{% endfor %}</tbody></table></div>
+<h2>Jobs</h2>
+<table><thead><tr><th>Job</th><th>Queue</th><th>Task</th><th>Status</th><th>Worker</th><th>Error</th></tr></thead><tbody>{% for j in jobs %}<tr><td>{{ j.id }}</td><td>{{ j.queue }}</td><td>{{ j.task }}</td><td><span class="pill {{ 'ok' if j.status=='done' else ('bad' if j.status=='failed' else 'warn') }}">{{ j.status }}</span></td><td class="muted">{{ j.worker }}</td><td class="muted">{{ (j.error or '')[:160] }}</td></tr>{% endfor %}</tbody></table>
+{% if jobs_failed and can('jobs.retry') %}<form method="post" action="/jobs/retry" class="mt"><input type="hidden" name="program" value="{{ p.id }}"><button>Retry failed jobs</button></form>{% endif %}
+
+{% elif tab == 'history' %}
+<p class="lead">Snapshots of the shared skills map and Blueprint: one per editor for every five minutes of editing, plus the approved version at every reopen and before every regeneration. Asset revisions are on each asset.</p>
+<div class="row"><a class="btn small {{ '' if kind=='skills_map' else 'sec' }}" href="?tab=history&kind=skills_map">Skills map</a><a class="btn small {{ '' if kind=='blueprint' else 'sec' }}" href="?tab=history&kind=blueprint">Blueprint</a></div>
+<table class="mt"><thead><tr><th>When</th><th>Who</th><th>Note</th><th></th></tr></thead><tbody>
+{% for h in hist %}<tr><td>{{ h.at }}</td><td>{{ h.by }}</td><td class="muted">{{ h.note }}</td><td><a class="btn small sec" href="?tab=history&kind={{ kind }}&i={{ loop.index0 }}">Show changes</a></td></tr>{% else %}<tr><td colspan="4" class="muted">No edits yet.</td></tr>{% endfor %}</tbody></table>
+{% if d_html %}<h2>Changes</h2><div class="diff tablewrap">{{ d_html|safe }}</div>{% endif %}
+
+{% elif tab == 'api' %}
+<p class="lead">Every call to Lightcast and Claude, with its purpose. Mock calls are labeled.</p>
+<div class="grid2">
+<div><h2>By endpoint</h2><table><thead><tr><th>Service</th><th>Mode</th><th>Endpoint</th><th class="num">Calls</th></tr></thead><tbody>{% for (svc, mode, path), n in by %}<tr><td>{{ svc }}</td><td>{{ mode }}</td><td><code>{{ path }}</code></td><td class="num">{{ n }}</td></tr>{% else %}<tr><td colspan="4" class="muted">None yet.</td></tr>{% endfor %}</tbody></table></div>
+<div><h2>Latest calls</h2><div class="tablewrap" style="max-height:60vh"><table><thead><tr><th>When</th><th>Service</th><th>Call</th><th>Purpose</th><th>Status</th></tr></thead><tbody>{% for c in calls %}<tr><td class="muted">{{ c.at.strftime('%m-%d %H:%M:%S') }}</td><td>{{ c.service }} <span class="pill soft">{{ c.mode }}</span></td><td><code>{{ c.method }} {{ c.path }}</code></td><td>{{ c.purpose }}</td><td>{{ c.status }}</td></tr>{% endfor %}</tbody></table></div></div>
+</div>
+{% endif %}
+{% endblock %}
